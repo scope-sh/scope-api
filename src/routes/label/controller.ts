@@ -1,3 +1,5 @@
+import MiniSearch from 'minisearch';
+
 import CloudflareService from '@/services/cloudflare';
 import { CHAINS, ChainId } from '@/utils/chains';
 import { Label } from '@/utils/labels';
@@ -14,6 +16,9 @@ type LabelWithAddress = Label & {
 
 const labels: Partial<Record<ChainId, Record<string, Label>>> = {};
 const labelsWithAddress: Partial<Record<ChainId, LabelWithAddress[]>> = {};
+const labelIndex: Partial<
+  Record<ChainId, MiniSearch<LabelWithAddress> | null>
+> = {};
 
 for (const chain of CHAINS) {
   console.log(`Fetch labels for chain ${chain}`);
@@ -39,8 +44,35 @@ for (const chain of CHAINS) {
         address,
       };
     })
-    .filter((label) => label !== null) as LabelWithAddress[];
+    .filter((label): label is LabelWithAddress => label !== null);
   labelsWithAddress[chain] = labelList;
+  labelIndex[chain] = new MiniSearch<LabelWithAddress>({
+    fields: ['value'],
+    extractField: (doc, fieldName): string => {
+      if (fieldName === 'address') {
+        return doc.address;
+      }
+      if (fieldName === 'value') {
+        return doc.value;
+      }
+      if (fieldName === 'type' && doc.type) {
+        return doc.type;
+      }
+      return '';
+    },
+    idField: 'address',
+    storeFields: ['address'],
+    searchOptions: {
+      boost: { keywords: 5 },
+      fuzzy: 0.1,
+    },
+  });
+  const chainIndex = labelIndex[chain];
+  if (chainIndex) {
+    for (const label of labelList) {
+      chainIndex.add(label);
+    }
+  }
 }
 
 function getLabelByAddress(chainId: ChainId, address: string): Label | null {
@@ -79,4 +111,49 @@ function getLabelsByAddressList(
   return foundLabels;
 }
 
-export { getLabelByAddress, getLabelsByAddressList };
+async function searchLabels(
+  chainId: ChainId,
+  query: string,
+): Promise<LabelWithAddress[]> {
+  const LIMIT = 20;
+  const chainIndex = labelIndex[chainId];
+  if (!chainIndex) {
+    return [];
+  }
+  const chainLabels = labels[chainId];
+  if (!chainLabels) {
+    return [];
+  }
+  if (query === '') {
+    return Object.keys(chainLabels)
+      .slice(0, LIMIT)
+      .map((address) => {
+        const label = chainLabels[address];
+        if (!label) {
+          return null;
+        }
+        return {
+          address,
+          ...label,
+        };
+      })
+      .filter((label): label is LabelWithAddress => label !== null);
+  }
+  const results = chainIndex.search(query);
+  return results
+    .slice(0, LIMIT)
+    .map((result) => {
+      const address = result.id;
+      const label = chainLabels[address];
+      if (!label) {
+        return null;
+      }
+      return {
+        ...label,
+        address,
+      };
+    })
+    .filter((label): label is LabelWithAddress => label !== null);
+}
+
+export { getLabelByAddress, getLabelsByAddressList, searchLabels };

@@ -5,7 +5,11 @@ import { z } from 'zod';
 
 import { chainSchema, parseChainId } from '@/utils/chains';
 
-import { getLabelByAddress, getLabelsByAddressList } from './controller';
+import {
+  getLabelByAddress,
+  getLabelsByAddressList,
+  searchLabels,
+} from './controller';
 
 const router = new Hono();
 
@@ -46,6 +50,23 @@ router.post(
     const chainId = parseChainId(chain);
     const label = getLabelsByAddressList(chainId, addresses as Address[]);
     return c.json(label);
+  },
+);
+
+router.get(
+  '/search',
+  zValidator(
+    'query',
+    z.object({
+      query: z.string(),
+      chain: chainSchema,
+    }),
+  ),
+  async (c) => {
+    const { query, chain } = c.req.valid('query');
+    const chainId = parseChainId(chain);
+    const labels = await searchLabels(chainId, query);
+    return c.json(labels);
   },
 );
 
