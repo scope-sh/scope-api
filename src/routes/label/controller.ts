@@ -20,61 +20,6 @@ const labelIndex: Partial<
   Record<ChainId, MiniSearch<LabelWithAddress> | null>
 > = {};
 
-for (const chain of CHAINS) {
-  console.log(`Fetch labels for chain ${chain}`);
-  const service = new CloudflareService(
-    cloudflareAccountId,
-    cloudflareAccessKeyId,
-    cloudflareSecretAccessKey,
-    cloudflareBucket,
-  );
-  const chainLabels = await service.getLabels(chain);
-  if (!chainLabels) {
-    continue;
-  }
-  labels[chain] = chainLabels;
-  const labelList = Object.keys(chainLabels)
-    .map((address) => {
-      const label = chainLabels[address];
-      if (!label) {
-        return null;
-      }
-      return {
-        ...label,
-        address,
-      };
-    })
-    .filter((label): label is LabelWithAddress => label !== null);
-  labelsWithAddress[chain] = labelList;
-  labelIndex[chain] = new MiniSearch<LabelWithAddress>({
-    fields: ['value'],
-    extractField: (doc, fieldName): string => {
-      if (fieldName === 'address') {
-        return doc.address;
-      }
-      if (fieldName === 'value') {
-        return doc.value;
-      }
-      if (fieldName === 'type' && doc.type) {
-        return doc.type;
-      }
-      return '';
-    },
-    idField: 'address',
-    storeFields: ['address'],
-    searchOptions: {
-      boost: { keywords: 5 },
-      fuzzy: 0.1,
-    },
-  });
-  const chainIndex = labelIndex[chain];
-  if (chainIndex) {
-    for (const label of labelList) {
-      chainIndex.add(label);
-    }
-  }
-}
-
 function getLabelByAddress(chainId: ChainId, address: string): Label | null {
   const chainLabels = labels[chainId];
   if (!chainLabels) {
@@ -156,4 +101,61 @@ async function searchLabels(
     .filter((label): label is LabelWithAddress => label !== null);
 }
 
-export { getLabelByAddress, getLabelsByAddressList, searchLabels };
+async function fetchLabels(): Promise<void> {
+  for (const chain of CHAINS) {
+    console.log(`Fetching labels for chain ${chain}`);
+    const service = new CloudflareService(
+      cloudflareAccountId,
+      cloudflareAccessKeyId,
+      cloudflareSecretAccessKey,
+      cloudflareBucket,
+    );
+    const chainLabels = await service.getLabels(chain);
+    if (!chainLabels) {
+      continue;
+    }
+    labels[chain] = chainLabels;
+    const labelList = Object.keys(chainLabels)
+      .map((address) => {
+        const label = chainLabels[address];
+        if (!label) {
+          return null;
+        }
+        return {
+          ...label,
+          address,
+        };
+      })
+      .filter((label): label is LabelWithAddress => label !== null);
+    labelsWithAddress[chain] = labelList;
+    labelIndex[chain] = new MiniSearch<LabelWithAddress>({
+      fields: ['value'],
+      extractField: (doc, fieldName): string => {
+        if (fieldName === 'address') {
+          return doc.address;
+        }
+        if (fieldName === 'value') {
+          return doc.value;
+        }
+        if (fieldName === 'type' && doc.type) {
+          return doc.type;
+        }
+        return '';
+      },
+      idField: 'address',
+      storeFields: ['address'],
+      searchOptions: {
+        boost: { keywords: 5 },
+        fuzzy: 0.1,
+      },
+    });
+    const chainIndex = labelIndex[chain];
+    if (chainIndex) {
+      for (const label of labelList) {
+        chainIndex.add(label);
+      }
+    }
+  }
+}
+
+export { getLabelByAddress, getLabelsByAddressList, searchLabels, fetchLabels };

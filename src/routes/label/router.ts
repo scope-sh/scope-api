@@ -1,5 +1,5 @@
 import { zValidator } from '@hono/zod-validator';
-import { Hono } from 'hono';
+import { Context, Hono, Next } from 'hono';
 import { Address } from 'viem';
 import { z } from 'zod';
 
@@ -9,12 +9,28 @@ import {
   getLabelByAddress,
   getLabelsByAddressList,
   searchLabels,
+  fetchLabels,
 } from './controller';
 
 const router = new Hono();
 
+const CACHE_DURATION = 1000 * 60 * 60 * 24;
+let lastUpdate = Date.now();
+
+fetchLabels();
+
+async function updateCacheIfStale(_c: Context, next: Next): Promise<void> {
+  const now = Date.now();
+  if (now - lastUpdate > CACHE_DURATION) {
+    fetchLabels();
+    lastUpdate = now;
+  }
+  await next();
+}
+
 router.get(
   '/one',
+  updateCacheIfStale,
   zValidator(
     'query',
     z.object({
@@ -32,6 +48,7 @@ router.get(
 
 router.post(
   '/many',
+  updateCacheIfStale,
   zValidator(
     'query',
     z.object({
@@ -55,6 +72,7 @@ router.post(
 
 router.get(
   '/search',
+  updateCacheIfStale,
   zValidator(
     'query',
     z.object({
