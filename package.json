@@ -1,0 +1,37 @@
+{
+  "name": "scope-api",
+  "version": "1.0.0",
+  "description": "Scope API",
+  "author": {
+    "name": "Timur Badretdinov",
+    "url": "https://github.com/Destiner"
+  },
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/scope-sh/scope-api.git"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "bun run --hot src/index.ts",
+    "lint": "bun run lint:prettier && bun run lint:eslint",
+    "lint:prettier": "prettier -c \"src/**/*.{json,js,ts}\"",
+    "lint:eslint": "eslint \"src/**/*.{js,ts}\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hono/zod-validator": "^0.2.1",
+    "hono": "^4.2.2",
+    "viem": "^2.9.12",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.0.12",
+    "@typescript-eslint/eslint-plugin": "^7.2.0",
+    "eslint": "^8.57.0",
+    "eslint-import-resolver-typescript": "^3.6.1",
+    "eslint-plugin-import": "^2.29.1",
+    "prettier": "^3.2.5",
+    "typescript": "^5.4.2"
+  }
+}
