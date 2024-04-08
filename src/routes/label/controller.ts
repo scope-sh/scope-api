@@ -1,4 +1,5 @@
 import MiniSearch from 'minisearch';
+import { Address } from 'viem';
 
 import MinioService from '@/services/minio';
 import { CHAINS, ChainId } from '@/utils/chains';
@@ -33,12 +34,12 @@ function getLabelByAddress(chainId: ChainId, address: string): Label | null {
 
 function getLabelsByAddressList(
   chainId: ChainId,
-  addressList: string[],
-): LabelWithAddress[] {
-  const foundLabels: LabelWithAddress[] = [];
+  addressList: Address[],
+): Record<Address, Label> {
+  const foundLabels: Record<Address, Label> = {};
   const chainLabels = labels[chainId];
   if (!chainLabels) {
-    return [];
+    return {};
   }
   for (const address of addressList) {
     if (address in chainLabels) {
@@ -46,10 +47,7 @@ function getLabelsByAddressList(
       if (!label) {
         continue;
       }
-      foundLabels.push({
-        address,
-        ...label,
-      });
+      foundLabels[address] = label;
     }
   }
   return foundLabels;
