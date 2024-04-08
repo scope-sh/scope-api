@@ -17,7 +17,7 @@ const router = new Hono();
 const CACHE_DURATION = 1000 * 60 * 60 * 24;
 let lastUpdate = Date.now();
 
-fetchLabels();
+await fetchLabels();
 
 async function updateCacheIfStale(_c: Context, next: Next): Promise<void> {
   const now = Date.now();
