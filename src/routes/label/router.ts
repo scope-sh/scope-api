@@ -65,8 +65,8 @@ router.post(
     const { chain } = c.req.valid('query');
     const { addresses } = c.req.valid('json');
     const chainId = parseChainId(chain);
-    const label = getLabelsByAddressList(chainId, addresses as Address[]);
-    return c.json(label);
+    const labels = getLabelsByAddressList(chainId, addresses as Address[]);
+    return c.json(labels);
   },
 );
 
