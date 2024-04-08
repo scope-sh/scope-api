@@ -1,14 +1,13 @@
 import MiniSearch from 'minisearch';
 
-import CloudflareService from '@/services/cloudflare';
+import MinioService from '@/services/minio';
 import { CHAINS, ChainId } from '@/utils/chains';
 import { Label } from '@/utils/labels';
 
-const cloudflareAccountId = process.env.CLOUDFLARE_ACCOUNT_ID as string;
-const cloudflareAccessKeyId = process.env.CLOUDFLARE_ACCESS_KEY_ID as string;
-const cloudflareSecretAccessKey = process.env
-  .CLOUDFLARE_SECRET_ACCESS_KEY as string;
-const cloudflareBucket = process.env.CLOUDFLARE_R2_BUCKET as string;
+const minioPublicEndpoint = process.env.MINIO_PUBLIC_ENDPOINT as string;
+const minioAccessKey = process.env.MINIO_ACCESS_KEY as string;
+const minioSecretKey = process.env.MINIO_SECRET_KEY as string;
+const minioBucket = process.env.MINIO_BUCKET as string;
 
 type LabelWithAddress = Label & {
   address: string;
@@ -104,11 +103,11 @@ async function searchLabels(
 async function fetchLabels(): Promise<void> {
   for (const chain of CHAINS) {
     console.log(`Fetching labels for chain ${chain}`);
-    const service = new CloudflareService(
-      cloudflareAccountId,
-      cloudflareAccessKeyId,
-      cloudflareSecretAccessKey,
-      cloudflareBucket,
+    const service = new MinioService(
+      minioPublicEndpoint,
+      minioAccessKey,
+      minioSecretKey,
+      minioBucket,
     );
     const chainLabels = await service.getLabels(chain);
     if (!chainLabels) {
