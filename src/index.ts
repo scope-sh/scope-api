@@ -6,9 +6,12 @@ import { label } from '@/routes/index.js';
 const app = new Hono();
 
 app.use(cors());
-app.get('/', (c) => {
-  return c.text('OK');
-});
-app.route('/label', label);
+
+const routes = app
+  .get('/', (c) => {
+    return c.text('OK');
+  })
+  .route('/label', label);
 
 export default app;
+export type AppType = typeof routes;
