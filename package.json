@@ -12,6 +12,9 @@
     "url": "git://github.com/scope-sh/scope-api.git"
   },
   "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
     "start": "bun run src/index.ts",
     "dev": "bun run --hot src/index.ts",
