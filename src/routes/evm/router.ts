@@ -15,8 +15,8 @@ const router = new Hono()
       z.object({
         address: z.string(),
         chain: chainSchema,
-        startBlock: z.number().nonnegative(),
-        limit: z.number().positive().lte(100),
+        startBlock: z.coerce.number().nonnegative(),
+        limit: z.coerce.number().positive().lte(100),
       }),
     ),
     async (c) => {
@@ -38,8 +38,8 @@ const router = new Hono()
       z.object({
         address: z.string(),
         chain: chainSchema,
-        startBlock: z.number().nonnegative(),
-        limit: z.number().positive().lte(100),
+        startBlock: z.coerce.number().nonnegative(),
+        limit: z.coerce.number().positive().lte(100),
       }),
     ),
     async (c) => {
