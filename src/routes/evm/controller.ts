@@ -36,9 +36,11 @@ interface Log {
 async function getAddressTransactions(
   chain: ChainId,
   address: Address,
+  fromBlock: number,
+  limit: number,
 ): Promise<Transaction[]> {
   const query: Query = {
-    fromBlock: 0,
+    fromBlock,
     transactions: [
       {
         from: [address],
@@ -47,7 +49,7 @@ async function getAddressTransactions(
         to: [address],
       },
     ],
-    maxNumTransactions: 20,
+    maxNumTransactions: limit,
     fieldSelection: {
       transaction: [
         'block_number',
@@ -70,15 +72,17 @@ async function getAddressTransactions(
 async function getAddressLogs(
   chain: ChainId,
   address: Address,
+  fromBlock: number,
+  limit: number,
 ): Promise<Log[]> {
   const query: Query = {
-    fromBlock: 0,
+    fromBlock,
     logs: [
       {
         address: [address],
       },
     ],
-    maxNumLogs: 20,
+    maxNumLogs: limit,
     fieldSelection: {
       log: [
         'log_index',

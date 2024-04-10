@@ -15,14 +15,18 @@ const router = new Hono()
       z.object({
         address: z.string(),
         chain: chainSchema,
+        startBlock: z.number().nonnegative(),
+        limit: z.number().positive().lte(100),
       }),
     ),
     async (c) => {
-      const { address, chain } = c.req.valid('query');
+      const { address, chain, startBlock, limit } = c.req.valid('query');
       const chainId = parseChainId(chain);
       const transactions = await getAddressTransactions(
         chainId,
         address as Address,
+        startBlock,
+        limit,
       );
       return c.json(transactions);
     },
@@ -34,12 +38,19 @@ const router = new Hono()
       z.object({
         address: z.string(),
         chain: chainSchema,
+        startBlock: z.number().nonnegative(),
+        limit: z.number().positive().lte(100),
       }),
     ),
     async (c) => {
-      const { address, chain } = c.req.valid('query');
+      const { address, chain, startBlock, limit } = c.req.valid('query');
       const chainId = parseChainId(chain);
-      const logs = await getAddressLogs(chainId, address as Address);
+      const logs = await getAddressLogs(
+        chainId,
+        address as Address,
+        startBlock,
+        limit,
+      );
       return c.json(logs);
     },
   );
