@@ -135,7 +135,7 @@ async function fetchLabels(): Promise<void> {
           return doc.value;
         }
         if (fieldName === 'type' && doc.type) {
-          return doc.type;
+          return doc.type.value;
         }
         return '';
       },

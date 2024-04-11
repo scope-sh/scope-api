@@ -1,8 +1,6 @@
-import { Address } from 'viem';
-
 import { type ChainId } from './chains.js';
 
-type LabelType =
+type LabelId =
   | 'wrapped'
   | 'erc20'
   | 'aave-v2-atoken'
@@ -15,10 +13,21 @@ type LabelType =
 type ChainLabelMap = Record<string, Label>;
 type LabelMap = Record<ChainId, ChainLabelMap>;
 
+interface LabelType {
+  id: LabelId;
+  value: string;
+}
+
+interface LabelNamespace {
+  id: string;
+  value: string;
+}
+
 interface Label {
-  value: Address;
-  namespace?: string;
+  value: string;
+  namespace?: LabelNamespace;
   type?: LabelType;
+  iconUrl?: string;
   metadata?: Record<string, unknown>;
 }
 
