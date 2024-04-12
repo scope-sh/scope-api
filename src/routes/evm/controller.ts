@@ -1,4 +1,8 @@
-import { HypersyncClient, Query } from '@envio-dev/hypersync-client';
+import {
+  HypersyncClient,
+  Query,
+  QueryResponse,
+} from '@envio-dev/hypersync-client';
 import { Address, Hex } from 'viem';
 
 import {
@@ -39,6 +43,30 @@ async function getAddressTransactions(
   fromBlock: number,
   limit: number,
 ): Promise<Transaction[]> {
+  const transactions: Transaction[] = [];
+  let nextBlock = fromBlock;
+  let height: number | undefined = Infinity;
+  while (transactions.length < limit && height && nextBlock < height) {
+    const response = await getAddressTransactionsPartial(
+      chain,
+      address,
+      nextBlock,
+      limit,
+    );
+    const newTransactions = response.data.transactions as Transaction[];
+    transactions.push(...newTransactions);
+    nextBlock = response.nextBlock;
+    height = response.archiveHeight;
+  }
+  return transactions;
+}
+
+async function getAddressTransactionsPartial(
+  chain: ChainId,
+  address: Address,
+  fromBlock: number,
+  limit: number,
+): Promise<QueryResponse> {
   const query: Query = {
     fromBlock,
     transactions: [
@@ -66,7 +94,7 @@ async function getAddressTransactions(
 
   const client = getClient(chain);
   const response = await client.sendReq(query);
-  return response.data.transactions as Transaction[];
+  return response;
 }
 
 async function getAddressLogs(
@@ -75,6 +103,30 @@ async function getAddressLogs(
   fromBlock: number,
   limit: number,
 ): Promise<Log[]> {
+  const logs: Log[] = [];
+  let nextBlock = fromBlock;
+  let height: number | undefined = Infinity;
+  while (logs.length < limit && height && nextBlock < height) {
+    const response = await getAddressLogsPartial(
+      chain,
+      address,
+      nextBlock,
+      limit,
+    );
+    const newLogs = response.data.logs as Log[];
+    logs.push(...newLogs);
+    nextBlock = response.nextBlock;
+    height = response.archiveHeight;
+  }
+  return logs;
+}
+
+async function getAddressLogsPartial(
+  chain: ChainId,
+  address: Address,
+  fromBlock: number,
+  limit: number,
+): Promise<QueryResponse> {
   const query: Query = {
     fromBlock,
     logs: [
@@ -100,7 +152,7 @@ async function getAddressLogs(
 
   const client = getClient(chain);
   const response = await client.sendReq(query);
-  return response.data.logs as Log[];
+  return response;
 }
 
 function getClient(chain: ChainId): HypersyncClient {
