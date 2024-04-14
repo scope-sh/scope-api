@@ -126,13 +126,16 @@ async function fetchLabels(): Promise<void> {
       .filter((label): label is LabelWithAddress => label !== null);
     labelsWithAddress[chain] = labelList;
     labelIndex[chain] = new MiniSearch<LabelWithAddress>({
-      fields: ['value'],
+      fields: ['value', 'type', 'namespace'],
       extractField: (doc, fieldName): string => {
         if (fieldName === 'address') {
           return doc.address;
         }
         if (fieldName === 'value') {
           return doc.value;
+        }
+        if (fieldName === 'namespace' && doc.namespace) {
+          return doc.namespace.value;
         }
         if (fieldName === 'type' && doc.type) {
           return doc.type.value;
