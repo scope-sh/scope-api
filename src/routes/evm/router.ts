@@ -5,7 +5,11 @@ import { z } from 'zod';
 
 import { chainSchema, parseChainId } from '@/utils/chains';
 
-import { getAddressTransactions, getAddressLogs } from './controller';
+import {
+  getAddressTransactions,
+  getAddressLogs,
+  getAddressOps,
+} from './controller';
 
 const router = new Hono()
   .get(
@@ -46,6 +50,29 @@ const router = new Hono()
       const { address, chain, startBlock, limit } = c.req.valid('query');
       const chainId = parseChainId(chain);
       const logs = await getAddressLogs(
+        chainId,
+        address as Address,
+        startBlock,
+        limit,
+      );
+      return c.json(logs);
+    },
+  )
+  .get(
+    '/ops',
+    zValidator(
+      'query',
+      z.object({
+        address: z.string(),
+        chain: chainSchema,
+        startBlock: z.coerce.number().nonnegative(),
+        limit: z.coerce.number().positive().lte(100),
+      }),
+    ),
+    async (c) => {
+      const { address, chain, startBlock, limit } = c.req.valid('query');
+      const chainId = parseChainId(chain);
+      const logs = await getAddressOps(
         chainId,
         address as Address,
         startBlock,
