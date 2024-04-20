@@ -40,4 +40,4 @@ interface Label {
   metadata?: Record<string, unknown>;
 }
 
-export type { ChainLabelMap, Label, LabelType, LabelMap };
+export type { ChainLabelMap, Label, LabelId, LabelType, LabelMap };

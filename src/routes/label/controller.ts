@@ -3,7 +3,7 @@ import { Address } from 'viem';
 
 import MinioService from '@/services/minio';
 import { CHAINS, ChainId } from '@/utils/chains';
-import { Label } from '@/utils/labels';
+import { Label, LabelId } from '@/utils/labels';
 
 const minioPublicEndpoint = process.env.MINIO_PUBLIC_ENDPOINT as string;
 const minioAccessKey = process.env.MINIO_ACCESS_KEY as string;
@@ -16,6 +16,9 @@ type LabelWithAddress = Label & {
 
 const labels: Partial<Record<ChainId, Record<string, Label>>> = {};
 const labelsWithAddress: Partial<Record<ChainId, LabelWithAddress[]>> = {};
+const labelsByType: Partial<
+  Record<ChainId, Record<LabelId, LabelWithAddress[]>>
+> = {};
 const labelIndex: Partial<
   Record<ChainId, MiniSearch<LabelWithAddress> | null>
 > = {};
@@ -51,6 +54,23 @@ function getLabelsByAddressList(
     }
   }
   return foundLabels;
+}
+
+function getLabelsByTypeId(
+  chainId: ChainId,
+  typeId: LabelId,
+  offset: number,
+  limit: number,
+): LabelWithAddress[] {
+  const chainLabels = labelsByType[chainId];
+  if (!chainLabels) {
+    return [];
+  }
+  const typeLabels = chainLabels[typeId];
+  if (!typeLabels) {
+    return [];
+  }
+  return typeLabels.slice(offset, offset + limit);
 }
 
 async function searchLabels(
@@ -125,6 +145,25 @@ async function fetchLabels(): Promise<void> {
       })
       .filter((label): label is LabelWithAddress => label !== null);
     labelsWithAddress[chain] = labelList;
+    labelsByType[chain] = labelList.reduce(
+      (acc, label) => {
+        if (!label.type) {
+          return acc;
+        }
+        const type = label.type.id;
+        if (!type) {
+          return acc;
+        }
+        let labelList = acc[type];
+        if (!labelList) {
+          labelList = [];
+          acc[type] = labelList;
+        }
+        labelList.push(label);
+        return acc;
+      },
+      {} as Record<string, LabelWithAddress[]>,
+    );
     labelIndex[chain] = new MiniSearch<LabelWithAddress>({
       fields: ['value', 'type', 'namespace'],
       extractField: (doc, fieldName): string => {
@@ -158,4 +197,10 @@ async function fetchLabels(): Promise<void> {
   }
 }
 
-export { getLabelByAddress, getLabelsByAddressList, searchLabels, fetchLabels };
+export {
+  getLabelByAddress,
+  getLabelsByAddressList,
+  getLabelsByTypeId,
+  searchLabels,
+  fetchLabels,
+};

@@ -4,10 +4,12 @@ import { Address } from 'viem';
 import { z } from 'zod';
 
 import { chainSchema, parseChainId } from '@/utils/chains';
+import { LabelId } from '@/utils/labels';
 
 import {
   getLabelByAddress,
   getLabelsByAddressList,
+  getLabelsByTypeId,
   searchLabels,
   fetchLabels,
 } from './controller';
@@ -82,6 +84,30 @@ const router = new Hono()
       const chainId = parseChainId(chain);
       const labels = await searchLabels(chainId, query);
       return c.json(labels);
+    },
+  )
+  .get(
+    '/type',
+    updateCacheIfStale,
+    zValidator(
+      'query',
+      z.object({
+        chain: chainSchema,
+        typeId: z.string(),
+        offset: z.coerce.number(),
+        limit: z.coerce.number(),
+      }),
+    ),
+    async (c) => {
+      const { typeId, chain, offset, limit } = c.req.valid('query');
+      const chainId = parseChainId(chain);
+      const label = getLabelsByTypeId(
+        chainId,
+        typeId as LabelId,
+        offset,
+        limit,
+      );
+      return c.json(label);
     },
   );
 
