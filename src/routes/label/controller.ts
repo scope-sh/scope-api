@@ -120,79 +120,83 @@ async function searchLabels(
 
 async function fetchLabels(): Promise<void> {
   for (const chain of CHAINS) {
-    console.log(`Fetching labels for chain ${chain}`);
-    const service = new MinioService(
-      minioPublicEndpoint,
-      minioAccessKey,
-      minioSecretKey,
-      minioBucket,
-    );
-    const chainLabels = await service.getLabels(chain);
-    if (!chainLabels) {
-      continue;
-    }
-    labels[chain] = chainLabels;
-    const labelList = Object.keys(chainLabels)
-      .map((address) => {
-        const label = chainLabels[address];
-        if (!label) {
-          return null;
-        }
-        return {
-          ...label,
-          address,
-        };
-      })
-      .filter((label): label is LabelWithAddress => label !== null);
-    labelsWithAddress[chain] = labelList;
-    labelsByType[chain] = labelList.reduce(
-      (acc, label) => {
-        if (!label.type) {
-          return acc;
-        }
-        const type = label.type.id;
-        if (!type) {
-          return acc;
-        }
-        let labelList = acc[type];
-        if (!labelList) {
-          labelList = [];
-          acc[type] = labelList;
-        }
-        labelList.push(label);
-        return acc;
-      },
-      {} as Record<string, LabelWithAddress[]>,
-    );
-    labelIndex[chain] = new MiniSearch<LabelWithAddress>({
-      fields: ['value', 'type', 'namespace'],
-      extractField: (doc, fieldName): string => {
-        if (fieldName === 'address') {
-          return doc.address;
-        }
-        if (fieldName === 'value') {
-          return doc.value;
-        }
-        if (fieldName === 'namespace' && doc.namespace) {
-          return doc.namespace.value;
-        }
-        if (fieldName === 'type' && doc.type) {
-          return doc.type.value;
-        }
-        return '';
-      },
-      idField: 'address',
-      storeFields: ['address'],
-      searchOptions: {
-        boost: { keywords: 5 },
-        fuzzy: 0.1,
-      },
-    });
-    const chainIndex = labelIndex[chain];
-    if (chainIndex) {
-      for (const label of labelList) {
-        chainIndex.add(label);
+    await fetchChainLabels(chain);
+  }
+}
+
+async function fetchChainLabels(chain: ChainId): Promise<void> {
+  console.log(`Fetching labels for chain ${chain}`);
+  const service = new MinioService(
+    minioPublicEndpoint,
+    minioAccessKey,
+    minioSecretKey,
+    minioBucket,
+  );
+  const chainLabels = await service.getLabels(chain);
+  if (!chainLabels) {
+    return;
+  }
+  labels[chain] = chainLabels;
+  const labelList = Object.keys(chainLabels)
+    .map((address) => {
+      const label = chainLabels[address];
+      if (!label) {
+        return null;
       }
+      return {
+        ...label,
+        address,
+      };
+    })
+    .filter((label): label is LabelWithAddress => label !== null);
+  labelsWithAddress[chain] = labelList;
+  labelsByType[chain] = labelList.reduce(
+    (acc, label) => {
+      if (!label.type) {
+        return acc;
+      }
+      const type = label.type.id;
+      if (!type) {
+        return acc;
+      }
+      let labelList = acc[type];
+      if (!labelList) {
+        labelList = [];
+        acc[type] = labelList;
+      }
+      labelList.push(label);
+      return acc;
+    },
+    {} as Record<LabelId, LabelWithAddress[]>,
+  );
+  labelIndex[chain] = new MiniSearch<LabelWithAddress>({
+    fields: ['value', 'type', 'namespace'],
+    extractField: (doc, fieldName): string => {
+      if (fieldName === 'address') {
+        return doc.address;
+      }
+      if (fieldName === 'value') {
+        return doc.value;
+      }
+      if (fieldName === 'namespace' && doc.namespace) {
+        return doc.namespace.value;
+      }
+      if (fieldName === 'type' && doc.type) {
+        return doc.type.value;
+      }
+      return '';
+    },
+    idField: 'address',
+    storeFields: ['address'],
+    searchOptions: {
+      boost: { keywords: 5 },
+      fuzzy: 0.1,
+    },
+  });
+  const chainIndex = labelIndex[chain];
+  if (chainIndex) {
+    for (const label of labelList) {
+      chainIndex.add(label);
     }
   }
 }
