@@ -120,12 +120,11 @@ async function searchLabels(
 
 async function fetchLabels(): Promise<void> {
   for (const chain of CHAINS) {
-    await fetchChainLabels(chain);
+    fetchChainLabels(chain);
   }
 }
 
 async function fetchChainLabels(chain: ChainId): Promise<void> {
-  console.log(`Fetching labels for chain ${chain}`);
   const service = new MinioService(
     minioPublicEndpoint,
     minioAccessKey,
@@ -199,6 +198,7 @@ async function fetchChainLabels(chain: ChainId): Promise<void> {
       chainIndex.add(label);
     }
   }
+  console.log(`Fetched labels for chain ${chain}`);
 }
 
 export {
