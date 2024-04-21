@@ -15,6 +15,8 @@ import {
   POLYGON,
   POLYGON_AMOY,
   SEPOLIA,
+  ARBITRUM,
+  ARBITRUM_SEPOLIA,
 } from '@/utils/chains';
 
 interface Transaction {
@@ -242,6 +244,10 @@ function getClient(chain: ChainId): HypersyncClient {
         return 'http://polygon.backup.hypersync.xyz';
       case POLYGON_AMOY:
         return 'http://amoy.backup.hypersync.xyz';
+      case ARBITRUM:
+        return 'http://arbitrum.backup.hypersync.xyz';
+      case ARBITRUM_SEPOLIA:
+        return 'http://arbitrum-sepolia.backup.hypersync.xyz';
     }
   }
 
