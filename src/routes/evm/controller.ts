@@ -159,74 +159,6 @@ async function getAddressLogsPartial(
   return response;
 }
 
-async function getAddressOps(
-  chain: ChainId,
-  sender: Address,
-  fromBlock: number,
-  limit: number,
-): Promise<Log[]> {
-  const logs: Log[] = [];
-  let nextBlock = fromBlock;
-  let height: number | undefined = Infinity;
-  while (logs.length < limit && height && nextBlock < height) {
-    const response = await getAddressOpsPartial(
-      chain,
-      sender,
-      nextBlock,
-      limit,
-    );
-    const newLogs = response.data.logs as Log[];
-    logs.push(...newLogs);
-    nextBlock = response.nextBlock;
-    height = response.archiveHeight;
-  }
-  return logs;
-}
-
-async function getAddressOpsPartial(
-  chain: ChainId,
-  sender: Address,
-  fromBlock: number,
-  limit: number,
-): Promise<QueryResponse> {
-  const ENTRYPOINT_0_6_ADDRESS = '0x5ff137d4b0fdcd49dca30c7cf57e578a026d2789';
-  const ENTRYPOINT_0_7_ADDRESS = '0x0000000071727de22e5e9d8baf0edac6f37da032';
-  const USER_OPERATION_EVENT_TOPIC =
-    '0x49628fd1471006c1482da88028e9ce4dbb080b815c9b0344d39e5a8e6ec1419f';
-
-  function addressToBytes32(address: Address): string {
-    return '0x' + address.toLowerCase().slice(2).padStart(64, '0');
-  }
-
-  const query: Query = {
-    fromBlock,
-    logs: [
-      {
-        address: [ENTRYPOINT_0_6_ADDRESS, ENTRYPOINT_0_7_ADDRESS],
-        topics: [[USER_OPERATION_EVENT_TOPIC], [], [addressToBytes32(sender)]],
-      },
-    ],
-    maxNumLogs: limit,
-    fieldSelection: {
-      log: [
-        'log_index',
-        'transaction_hash',
-        'block_number',
-        'address',
-        'data',
-        'topic0',
-        'topic1',
-        'topic2',
-        'topic3',
-      ],
-    },
-  };
-
-  const client = getClient(chain);
-  const response = await client.sendReq(query);
-  return response;
-}
-
 function getClient(chain: ChainId): HypersyncClient {
   function getEndpoint(chain: ChainId): string {
     switch (chain) {
@@ -259,4 +191,4 @@ function getClient(chain: ChainId): HypersyncClient {
   });
 }
 
-export { getAddressTransactions, getAddressLogs, getAddressOps };
+export { getAddressTransactions, getAddressLogs };
