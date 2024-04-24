@@ -28,6 +28,7 @@ interface Transaction {
   to: Address | undefined;
   transactionIndex: number;
   value: Hex;
+  status: number;
 }
 
 interface Log {
@@ -90,6 +91,7 @@ async function getAddressTransactionsPartial(
         'input',
         'value',
         'gas_price',
+        'status',
       ],
     },
   };
