@@ -163,25 +163,25 @@ function getClient(chain: ChainId): HypersyncClient {
   function getEndpoint(chain: ChainId): string {
     switch (chain) {
       case ETHEREUM:
-        return 'http://eth.backup.hypersync.xyz';
+        return 'https://eth.hypersync.xyz';
       case SEPOLIA:
-        return 'http://sepolia.backup.hypersync.xyz';
+        return 'https://sepolia.hypersync.xyz';
       case OPTIMISM:
-        return 'http://optimism.backup.hypersync.xyz';
+        return 'https://optimism.hypersync.xyz';
       case OPTIMISM_SEPOLIA:
-        return 'http://optimism-sepolia.backup.hypersync.xyz';
+        return 'https://optimism-sepolia.hypersync.xyz';
       case BASE:
-        return 'http://base.backup.hypersync.xyz';
+        return 'https://base.hypersync.xyz';
       case BASE_SEPOLIA:
-        return 'http://base-sepolia.backup.hypersync.xyz';
+        return 'https://base-sepolia.hypersync.xyz';
       case POLYGON:
-        return 'http://polygon.backup.hypersync.xyz';
+        return 'https://polygon.hypersync.xyz';
       case POLYGON_AMOY:
-        return 'http://amoy.backup.hypersync.xyz';
+        return 'https://amoy.hypersync.xyz';
       case ARBITRUM:
-        return 'http://arbitrum.backup.hypersync.xyz';
+        return 'https://arbitrum.hypersync.xyz';
       case ARBITRUM_SEPOLIA:
-        return 'http://arbitrum-sepolia.backup.hypersync.xyz';
+        return 'https://arbitrum-sepolia.hypersync.xyz';
     }
   }
 
