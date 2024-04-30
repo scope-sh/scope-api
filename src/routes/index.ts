@@ -1,4 +1,4 @@
-import evm from './evm/router.js';
 import label from './label/router.js';
 
-export { evm, label };
+// eslint-disable-next-line import/prefer-default-export
+export { label };
