@@ -15,7 +15,6 @@ type LabelWithAddress = Label & {
 };
 
 const labels: Partial<Record<ChainId, Record<string, Label>>> = {};
-const labelsWithAddress: Partial<Record<ChainId, LabelWithAddress[]>> = {};
 const labelIndex: Partial<
   Record<ChainId, MiniSearch<LabelWithAddress> | null>
 > = {};
@@ -128,7 +127,6 @@ async function fetchChainLabels(chain: ChainId): Promise<void> {
       };
     })
     .filter((label): label is LabelWithAddress => label !== null);
-  labelsWithAddress[chain] = labelList;
   labelIndex[chain] = new MiniSearch<LabelWithAddress>({
     fields: ['value', 'type', 'namespace'],
     extractField: (doc, fieldName): string => {
