@@ -145,7 +145,6 @@ async function fetchChainLabels(chain: ChainId): Promise<void> {
       return '';
     },
     idField: 'address',
-    storeFields: ['address'],
     searchOptions: {
       boost: { keywords: 5 },
       fuzzy: 0.1,
