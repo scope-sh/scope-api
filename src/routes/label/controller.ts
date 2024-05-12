@@ -156,7 +156,7 @@ async function fetchChainLabels(chain: ChainId): Promise<void> {
       chainIndex.add(label);
     }
   }
-  console.log(`Fetched labels for chain ${chain}`);
+  console.info(`Fetched labels for chain ${chain}`);
 }
 
 export { getLabelByAddress, getLabelsByAddressList, searchLabels, fetchLabels };
