@@ -103,6 +103,8 @@ class Service {
     | null
     | undefined
   > {
+    // Using axios to send an HTTP request hangs Bun
+    // Using fetch as a workaround
     const response = await fetch(
       `${this.client.defaults.baseURL}?module=contract&action=getsourcecode&address=${address}`,
     );
