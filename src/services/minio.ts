@@ -24,6 +24,11 @@ interface ProxyContract extends BaseContract {
 
 type Contract = StaticContract | ProxyContract;
 
+interface ContractCache {
+  value: Contract | null;
+  timestamp: number;
+}
+
 async function streamToString(stream: Readable): Promise<string> {
   return new Promise((resolve, reject) => {
     let data = '';
@@ -75,7 +80,7 @@ class Service {
   async getContract(
     chain: ChainId,
     address: Address,
-  ): Promise<Contract | null> {
+  ): Promise<ContractCache | null> {
     const key = `contracts/${chain}/${address}.json`;
     try {
       const file = await this.client.getObject(this.bucket, key);
@@ -89,12 +94,16 @@ class Service {
   async setContract(
     chain: ChainId,
     address: Address,
-    code: Contract,
+    code: Contract | null,
   ): Promise<void> {
     const key = `contracts/${chain}/${address}.json`;
-    await this.client.putObject(this.bucket, key, JSON.stringify(code));
+    const cache: ContractCache = {
+      value: code,
+      timestamp: Date.now(),
+    };
+    await this.client.putObject(this.bucket, key, JSON.stringify(cache));
   }
 }
 
 export default Service;
-export type { BaseContract };
+export type { Contract, ContractCache };

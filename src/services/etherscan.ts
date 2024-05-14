@@ -88,12 +88,21 @@ class Service {
     }
   }
 
-  async getSourceCode(address: string): Promise<{
-    source: SourceCode;
-    abi: Abi;
-    isProxy: boolean;
-    implementation: Address | null;
-  } | null> {
+  /*
+   * Fetches the source code for a given address
+   * @param address The address of the contract
+   * @returns The source code for the contract, or null if the contract is not verified, or undefined if an error occurred
+   */
+  async getSourceCode(address: string): Promise<
+    | {
+        source: SourceCode;
+        abi: Abi;
+        isProxy: boolean;
+        implementation: Address | null;
+      }
+    | null
+    | undefined
+  > {
     const response = await this.client.get<SourceResponse>('', {
       params: {
         module: 'contract',
@@ -106,14 +115,14 @@ class Service {
       const error =
         typeof data.result === 'string' ? data.result : 'Unknown error';
       console.error(`Error fetching sources for ${address}: ${error}`);
-      return null;
+      return undefined;
     }
     if (typeof data.result === 'string') {
-      return null;
+      return undefined;
     }
     const result = data.result[0];
     if (!result) {
-      return null;
+      return undefined;
     }
     const sourceCode = parseSource(result.SourceCode);
     if (!sourceCode) {

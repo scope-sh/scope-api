@@ -2,7 +2,7 @@ import { alchemy } from 'evm-providers';
 import { Abi, Address, PublicClient, createPublicClient, http } from 'viem';
 
 import EtherscanService from '@/services/etherscan';
-import MinioService, { BaseContract as BaseCode } from '@/services/minio';
+import MinioService, { Contract, ContractCache } from '@/services/minio';
 import { ChainId, getChainData } from '@/utils/chains';
 import { getImplementation } from '@/utils/proxy';
 import { SourceCode } from '@/utils/sources';
@@ -13,8 +13,16 @@ const minioAccessKey = process.env.MINIO_ACCESS_KEY as string;
 const minioSecretKey = process.env.MINIO_SECRET_KEY as string;
 const minioBucket = process.env.MINIO_BUCKET as string;
 
+const DAY = 1000 * 60 * 60 * 24;
+const NO_SOURCE_CACHE_DURATION = 7 * DAY;
+const IMPLEMENTATION_CACHE_DURATION = DAY;
+
 type ContractResponse = ProxyContractResponse | StaticContractResponse;
-type BaseContractResponse = BaseCode;
+interface BaseContractResponse {
+  isProxy: boolean;
+  abi: Abi;
+  source: SourceCode;
+}
 interface ProxyContractResponse extends BaseContractResponse {
   isProxy: true;
   implementation: {
@@ -26,15 +34,6 @@ interface ProxyContractResponse extends BaseContractResponse {
 interface StaticContractResponse extends BaseContractResponse {
   isProxy: false;
 }
-
-interface ProxyContractCode extends BaseCode {
-  isProxy: true;
-  implementation: Address | null;
-}
-interface StaticContractCode extends BaseCode {
-  isProxy: false;
-}
-type ContractCode = StaticContractCode | ProxyContractCode;
 
 function getClient(chain: ChainId, alchemyKey: string): PublicClient {
   const endpointUrl = alchemy(chain, alchemyKey);
@@ -56,16 +55,24 @@ async function getContractSource(
     minioBucket,
   );
   const contract = await fetchContract(minioService, chain, address);
-  if (!contract || !contract.code) {
+  if (!contract.value) {
     return null;
   }
-  const contractCode = contract.code;
+  const contractCode = contract.value;
   if (contractCode.isProxy) {
-    const implementation =
-      contract.isCached || contractCode.implementation === null
-        ? (await getImplementation(client, address)) ||
-          contractCode.implementation
-        : contractCode.implementation;
+    // Use cached version if not stale
+    const useCachedImplementation =
+      contract.timestamp > Date.now() - IMPLEMENTATION_CACHE_DURATION;
+    const implementation = useCachedImplementation
+      ? contractCode.implementation
+      : await getImplementation(client, address);
+    // Store the implementation in the cache
+    if (!useCachedImplementation) {
+      await minioService.setContract(chain, address, {
+        ...contractCode,
+        implementation,
+      });
+    }
     if (!implementation) {
       return {
         ...contractCode,
@@ -77,7 +84,7 @@ async function getContractSource(
       chain,
       implementation,
     );
-    if (!implementationContract || !implementationContract.code) {
+    if (!implementationContract.value) {
       return {
         ...contractCode,
         implementation: null,
@@ -85,19 +92,19 @@ async function getContractSource(
     }
     return {
       isProxy: true,
-      abi: contract.code.abi,
-      source: contract.code.source,
+      abi: contractCode.abi,
+      source: contractCode.source,
       implementation: {
         address: implementation,
-        abi: implementationContract.code.abi,
-        source: implementationContract.code.source,
+        abi: implementationContract.value.abi,
+        source: implementationContract.value.source,
       },
     };
   }
   return {
     isProxy: false,
-    abi: contract.code.abi,
-    source: contract.code.source,
+    abi: contractCode.abi,
+    source: contractCode.source,
   };
 }
 
@@ -105,36 +112,51 @@ async function fetchContract(
   minioService: MinioService,
   chain: ChainId,
   address: Address,
-): Promise<{
-  code: ContractCode | null;
-  isCached: boolean;
-}> {
+): Promise<ContractCache> {
   const etherscanService = new EtherscanService(chain);
   const cachedCode = await minioService.getContract(chain, address);
   if (cachedCode) {
-    return {
-      code: cachedCode,
-      isCached: true,
-    };
+    if (
+      !cachedCode.value ||
+      cachedCode.timestamp > Date.now() - NO_SOURCE_CACHE_DURATION
+    ) {
+      return {
+        value: cachedCode.value,
+        timestamp: cachedCode.timestamp,
+      };
+    }
   }
+  // No cache or stale cache
   const contract = await etherscanService.getSourceCode(address);
-  if (!contract) {
+  if (contract === undefined) {
     return {
-      code: null,
-      isCached: false,
+      value: null,
+      timestamp: Date.now(),
     };
   }
-  // Cache the contract
-  await minioService.setContract(chain, address, contract);
-  if (contract.isProxy) {
+  if (contract === null) {
+    await minioService.setContract(chain, address, null);
     return {
-      code: contract,
-      isCached: false,
+      value: null,
+      timestamp: Date.now(),
     };
   }
+  const code: Contract = contract.isProxy
+    ? {
+        abi: contract.abi,
+        source: contract.source,
+        isProxy: contract.isProxy,
+        implementation: contract.implementation,
+      }
+    : {
+        abi: contract.abi,
+        source: contract.source,
+        isProxy: contract.isProxy,
+      };
+  await minioService.setContract(chain, address, code);
   return {
-    code: contract,
-    isCached: false,
+    value: code,
+    timestamp: Date.now(),
   };
 }
 
