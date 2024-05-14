@@ -51,8 +51,6 @@ interface SourceCodeResponse {
 
 // Bun doesn't support brotli yet
 axios.defaults.headers.common['Accept-Encoding'] = 'gzip';
-// Bun doesn't support happy eyeballs yet
-axios.defaults.httpAgent = new Agent({ family: 4 });
 
 const DEFAULT_PATH = '';
 
@@ -107,13 +105,6 @@ class Service {
     | null
     | undefined
   > {
-    // const response = await this.client.get<SourceResponse>('', {
-    //   params: {
-    //     module: 'contract',
-    //     action: 'getsourcecode',
-    //     address,
-    //   },
-    // });
     const response = await fetch(
       `${this.client.defaults.baseURL}?module=contract&action=getsourcecode&address=${address}`,
     );
