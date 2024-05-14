@@ -116,25 +116,6 @@ async function fetchContract(
       code: cachedCode,
       isCached: true,
     };
-    // if (cachedCode.isProxy) {
-    //   return {
-    //     code: {
-    //       source: cachedCode.source,
-    //       abi: cachedCode.abi,
-    //       isProxy: cachedCode.isProxy,
-    //       implementation: null,
-    //     },
-    //     isCached: true,
-    //   };
-    // }
-    // return {
-    //   code: {
-    //     isProxy: cachedCode.isProxy,
-    //     abi: cachedCode.abi,
-    //     source: cachedCode.source,
-    //   },
-    //   isCached: true,
-    // };
   }
   const contract = await etherscanService.getSourceCode(address);
   if (!contract) {
