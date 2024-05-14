@@ -1,3 +1,5 @@
+import { Agent } from 'http';
+
 import axios, { AxiosInstance } from 'axios';
 import { Abi, Address } from 'viem';
 
@@ -49,6 +51,8 @@ interface SourceCodeResponse {
 
 // Bun doesn't support brotli yet
 axios.defaults.headers.common['Accept-Encoding'] = 'gzip';
+// Bun doesn't support happy eyeballs yet
+axios.defaults.httpAgent = new Agent({ family: 4 });
 
 const DEFAULT_PATH = '';
 
