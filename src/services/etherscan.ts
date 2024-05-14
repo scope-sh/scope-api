@@ -107,14 +107,17 @@ class Service {
     | null
     | undefined
   > {
-    const response = await this.client.get<SourceResponse>('', {
-      params: {
-        module: 'contract',
-        action: 'getsourcecode',
-        address,
-      },
-    });
-    const data = response.data;
+    // const response = await this.client.get<SourceResponse>('', {
+    //   params: {
+    //     module: 'contract',
+    //     action: 'getsourcecode',
+    //     address,
+    //   },
+    // });
+    const response = await fetch(
+      `${this.client.defaults.baseURL}?module=contract&action=getsourcecode&address=${address}`,
+    );
+    const data = (await response.json()) as SourceResponse;
     if (data.status !== '1') {
       const error =
         typeof data.result === 'string' ? data.result : 'Unknown error';
