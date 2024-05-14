@@ -1,5 +1,3 @@
-import { Agent } from 'http';
-
 import axios, { AxiosInstance } from 'axios';
 import { Abi, Address } from 'viem';
 
