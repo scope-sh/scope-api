@@ -128,7 +128,7 @@ class Service {
     if (!sourceCode) {
       return null;
     }
-    const entry = Object.keys(sourceCode.sources)[0] || DEFAULT_PATH;
+    const entry = getEntry(sourceCode.sources, result.ContractName);
     const files = Object.fromEntries(
       Object.entries(sourceCode.sources).map(([name, { content }]) => [
         name,
@@ -210,6 +210,32 @@ function parseSource(source: string): SourceCodeResponse | null {
       },
     },
   };
+}
+
+function getEntry(
+  sources: Record<string, { content: string }>,
+  name: string,
+): string {
+  function getFileNameNoExtension(path: string): string {
+    const index = path.lastIndexOf('/');
+    const fileName = index === -1 ? path : path.substring(index + 1);
+    const extensionIndex = fileName.lastIndexOf('.');
+    return extensionIndex === -1
+      ? fileName
+      : fileName.substring(0, extensionIndex);
+  }
+
+  const keys = Object.keys(sources);
+  if (keys.length === 1) {
+    return DEFAULT_PATH;
+  }
+  for (const key of keys) {
+    const fileName = getFileNameNoExtension(key);
+    if (fileName === name) {
+      return key;
+    }
+  }
+  return Object.keys(sources)[0] || DEFAULT_PATH;
 }
 
 export default Service;
