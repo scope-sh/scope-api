@@ -1,7 +1,8 @@
-import { zeroAddress, zeroHash } from 'viem';
+import { padHex, zeroAddress, zeroHash } from 'viem';
 import type { Address, Hex, PublicClient } from 'viem';
 
-import eip897Abi from '@/abi/eip897Proxy.js';
+import eip897ProxyAbi from '@/abi/eip897Proxy.js';
+import safeProxyAbi from '@/abi/safeProxy.js';
 
 // Storage slots for common proxy implementations
 // Credit to @shazow for the original list
@@ -33,12 +34,6 @@ const slots: Record<string, Hex> = {
   PROXIABLE:
     '0xc5f16f0fcc639fa48a6947836d9850f504798523bf8c9a3a87d5876cf622bcf7',
 
-  // Gnosis Safe Proxy Factor 1.1.1
-  // Not actually a slot, but there's a PUSH32 to the masterCopy() selector
-  // masterCopy value lives in the 0th slot on the contract
-  GNOSIS_SAFE_SELECTOR:
-    '0xa619486e00000000000000000000000000000000000000000000000000000000',
-
   // TODO
   // Diamond Proxy, as used by ZkSync Era contract
   // https://etherscan.io/address/0x32400084c286cf3e17e7b677ea9583e60a000324#code
@@ -65,11 +60,23 @@ async function getStorage(
 }
 
 function getSlot(slots: Record<string, Hex>, name: string): Hex | null {
-  if (name === 'GNOSIS_SAFE_SELECTOR') {
-    return zeroHash;
-  }
   const slot = slots[name];
   return slot || null;
+}
+
+function toAddress(slotValue: Hex | null): Address | null {
+  if (!slotValue) {
+    return null;
+  }
+  if (slotValue === zeroHash) {
+    return null;
+  }
+  const address = `0x${slotValue.slice(-40)}` as Address;
+  // First 12 bytes should be zero
+  if (padHex(address) !== slotValue) {
+    return null;
+  }
+  return address;
 }
 
 // Attempts to get the proxy implementation address for a given address
@@ -82,16 +89,29 @@ async function getImplementation(
   const callResults = await client.multicall({
     contracts: [
       {
-        abi: eip897Abi,
-        address: address as Address,
+        abi: eip897ProxyAbi,
+        address: address,
         functionName: 'implementation',
+        args: [],
+      },
+      {
+        abi: safeProxyAbi,
+        address: address,
+        functionName: 'masterCopy',
         args: [],
       },
     ],
   });
-  const callResult = callResults[0];
-  if (callResult.status === 'success') {
-    const address = callResult.result.toLowerCase() as Address;
+  const implementationResult = callResults[0];
+  const masterCopyResult = callResults[1];
+  if (implementationResult.status === 'success') {
+    const address = implementationResult.result.toLowerCase() as Address;
+    if (address !== zeroAddress) {
+      return address;
+    }
+  }
+  if (masterCopyResult.status === 'success') {
+    const address = masterCopyResult.result.toLowerCase() as Address;
     if (address !== zeroAddress) {
       return address;
     }
@@ -103,15 +123,17 @@ async function getImplementation(
       continue;
     }
     const slotValue = await getStorage(client, address, slot);
-    if (!slotValue) {
-      continue;
+    const slotAddress = toAddress(slotValue);
+    if (slotAddress) {
+      return slotAddress;
     }
-    if (slotValue === zeroHash) {
-      continue;
-    }
-    // Convert to address
-    const slotValueAddress = `0x${slotValue.slice(-40)}` as Address;
-    return slotValueAddress;
+  }
+  // Try address-based slot lookup
+  const addressSlot = padHex(address);
+  const slotValue = await getStorage(client, address, addressSlot);
+  const slotAddress = toAddress(slotValue);
+  if (slotAddress) {
+    return slotAddress;
   }
   return null;
 }
