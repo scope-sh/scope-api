@@ -7,25 +7,14 @@ import { ChainId } from '@/utils/chains';
 import { ChainLabelMap } from '@/utils/labels';
 import { SourceCode } from '@/utils/sources';
 
-interface BaseContract {
-  source: SourceCode;
-  abi: Abi;
-  isProxy: boolean;
-}
-
-interface StaticContract extends BaseContract {
-  isProxy: false;
-}
-
-interface ProxyContract extends BaseContract {
-  isProxy: true;
+interface Contract {
+  source: SourceCode | null;
+  abi: Abi | null;
   implementation: Address | null;
 }
 
-type Contract = StaticContract | ProxyContract;
-
 interface ContractCache {
-  value: Contract | null;
+  value: Contract;
   timestamp: number;
 }
 
@@ -94,7 +83,7 @@ class Service {
   async setContract(
     chain: ChainId,
     address: Address,
-    code: Contract | null,
+    code: Contract,
   ): Promise<void> {
     const key = `contracts/${chain}/${address}.json`;
     const cache: ContractCache = {
