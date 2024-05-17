@@ -7,7 +7,7 @@ import safeProxyAbi from '@/abi/safeProxy.js';
 // Storage slots for common proxy implementations
 // Credit to @shazow for the original list
 // https://github.com/shazow/whatsabi/blob/9cdb489da3360146382a180bd16f13458bdf36b1/src/proxies.ts
-const slots: Record<string, Hex> = {
+const slotMap: Record<string, Hex> = {
   // EIP-1967: Proxy Storage Slots
   // bytes32(uint256(keccak256('eip1967.proxy.implementation')) - 1)
   EIP1967_IMPL:
@@ -44,24 +44,12 @@ const slots: Record<string, Hex> = {
 async function getStorage(
   client: PublicClient,
   address: Address,
-  slot: Hex,
-): Promise<Hex | null> {
-  if (!client) {
-    return null;
-  }
-  const result = await client.getStorageAt({
-    address: address as Address,
-    slot: slot as Hex,
-  });
-  if (!result) {
-    return null;
-  }
-  return result;
-}
-
-function getSlot(slots: Record<string, Hex>, name: string): Hex | null {
-  const slot = slots[name];
-  return slot || null;
+  slots: Hex[],
+): Promise<Hex[]> {
+  const results = await Promise.all(
+    slots.map((slot) => client.getStorageAt({ address, slot })),
+  );
+  return results.filter((result): result is Hex => !!result);
 }
 
 function toAddress(slotValue: Hex | null): Address | null {
@@ -116,24 +104,15 @@ async function getImplementation(
       return address;
     }
   }
-  // Try slot-based lookup
-  for (const name in slots) {
-    const slot = getSlot(slots, name);
-    if (!slot) {
-      continue;
-    }
-    const slotValue = await getStorage(client, address, slot);
-    const slotAddress = toAddress(slotValue);
+  const slots = Object.values(slotMap);
+  const addressSlot = padHex(address);
+  slots.push(addressSlot);
+  const slotValues = await getStorage(client, address, slots);
+  for (const slot of slotValues) {
+    const slotAddress = toAddress(slot);
     if (slotAddress) {
       return slotAddress;
     }
-  }
-  // Try address-based slot lookup
-  const addressSlot = padHex(address);
-  const slotValue = await getStorage(client, address, addressSlot);
-  const slotAddress = toAddress(slotValue);
-  if (slotAddress) {
-    return slotAddress;
   }
   return null;
 }
