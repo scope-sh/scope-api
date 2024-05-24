@@ -1,5 +1,16 @@
 import { alchemy } from 'evm-providers';
-import { Abi, Address, PublicClient, createPublicClient, http } from 'viem';
+import {
+  Abi,
+  AbiEvent,
+  AbiFunction,
+  Address,
+  Hex,
+  PublicClient,
+  createPublicClient,
+  http,
+  toEventSelector,
+  toFunctionSelector,
+} from 'viem';
 
 import EtherscanService from '@/services/etherscan';
 import MinioService, { Contract, ContractCache } from '@/services/minio';
@@ -87,6 +98,89 @@ async function getContractSource(
   };
 }
 
+async function getContractAbi(
+  chain: ChainId,
+  address: Address,
+): Promise<Abi | null> {
+  const minioService = new MinioService(
+    minioPublicEndpoint,
+    minioAccessKey,
+    minioSecretKey,
+    minioBucket,
+  );
+  const contract = await fetchContract(minioService, chain, address);
+  if (!contract) {
+    return null;
+  }
+  const implementation = contract.value.implementation;
+  if (!implementation) {
+    return contract.value.abi;
+  }
+  const implementationContract = await fetchContract(
+    minioService,
+    chain,
+    implementation,
+  );
+  return implementationContract.value.abi;
+}
+
+async function getEventAbi(
+  chain: ChainId,
+  selectors: Record<string, string[]>,
+): Promise<Record<Address, Record<Hex, AbiEvent>>> {
+  const eventAbi: Record<Address, Record<Hex, AbiEvent>> = {};
+  for (const address in selectors) {
+    const contractAbi = await getContractAbi(chain, address as Address);
+    if (!contractAbi) {
+      continue;
+    }
+    const contractEventAbi: Record<Hex, AbiEvent> = {};
+    const contractSelectors = selectors[address];
+    if (!contractSelectors) {
+      continue;
+    }
+    for (const selector of contractSelectors) {
+      const topicEventAbi = contractAbi.find(
+        (abi) => abi.type === 'event' && toEventSelector(abi) === selector,
+      );
+      if (topicEventAbi) {
+        contractEventAbi[selector as Hex] = topicEventAbi as AbiEvent;
+      }
+    }
+    eventAbi[address as Address] = contractEventAbi;
+  }
+  return eventAbi;
+}
+
+async function getFunctionAbi(
+  chain: ChainId,
+  selectors: Record<string, string[]>,
+): Promise<Record<Address, Record<Hex, AbiFunction>>> {
+  const functionAbi: Record<Address, Record<Hex, AbiFunction>> = {};
+  for (const address in selectors) {
+    const contractAbi = await getContractAbi(chain, address as Address);
+    if (!contractAbi) {
+      continue;
+    }
+    const contractFunctionAbi: Record<Hex, AbiFunction> = {};
+    const contractSelectors = selectors[address];
+    if (!contractSelectors) {
+      continue;
+    }
+    for (const selector of contractSelectors) {
+      const topicFunctionAbi = contractAbi.find(
+        (abi) =>
+          abi.type === 'function' && toFunctionSelector(abi) === selector,
+      );
+      if (topicFunctionAbi) {
+        contractFunctionAbi[selector as Hex] = topicFunctionAbi as AbiFunction;
+      }
+    }
+    functionAbi[address as Address] = contractFunctionAbi;
+  }
+  return functionAbi;
+}
+
 async function fetchContract(
   minioService: MinioService,
   chain: ChainId,
@@ -129,5 +223,4 @@ async function fetchContract(
   };
 }
 
-// eslint-disable-next-line import/prefer-default-export
-export { getContractSource };
+export { getContractSource, getEventAbi, getFunctionAbi };
