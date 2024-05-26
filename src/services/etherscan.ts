@@ -224,9 +224,6 @@ function getEntry(
   }
 
   const keys = Object.keys(sources);
-  if (keys.length === 1) {
-    return DEFAULT_PATH;
-  }
   for (const key of keys) {
     const fileName = getFileNameNoExtension(key);
     if (fileName === name) {
