@@ -45,6 +45,14 @@ type OptionalContractCache = {
     : ContractCache[K];
 };
 
+type Abis = Record<
+  Address,
+  {
+    functions: Record<Hex, AbiFunction>;
+    events: Record<Hex, AbiEvent>;
+  }
+>;
+
 function getClient(chain: ChainId, alchemyKey: string): PublicClient {
   const endpointUrl = alchemy(chain, alchemyKey);
   return createPublicClient({
@@ -53,7 +61,7 @@ function getClient(chain: ChainId, alchemyKey: string): PublicClient {
   });
 }
 
-async function getContractSource(
+async function getSource(
   chain: ChainId,
   address: Address,
 ): Promise<ContractResponse | null> {
@@ -98,7 +106,54 @@ async function getContractSource(
   };
 }
 
-async function getContractAbi(
+async function getAbi(
+  chain: ChainId,
+  contracts: Record<
+    string,
+    {
+      functions: string[];
+      events: string[];
+    }
+  >,
+): Promise<Abis> {
+  const abi: Abis = {};
+  for (const address in contracts) {
+    const contractAbi = await fetchContractAbi(chain, address as Address);
+    if (!contractAbi) {
+      continue;
+    }
+    const contractSelectors = contracts[address];
+    if (!contractSelectors) {
+      continue;
+    }
+    const contractEventAbi: Record<Hex, AbiEvent> = {};
+    for (const selector of contractSelectors.events) {
+      const topicEventAbi = contractAbi.find(
+        (abi) => abi.type === 'event' && toEventSelector(abi) === selector,
+      );
+      if (topicEventAbi) {
+        contractEventAbi[selector as Hex] = topicEventAbi as AbiEvent;
+      }
+    }
+    const contractFunctionAbi: Record<Hex, AbiFunction> = {};
+    for (const selector of contractSelectors.functions) {
+      const topicFunctionAbi = contractAbi.find(
+        (abi) =>
+          abi.type === 'function' && toFunctionSelector(abi) === selector,
+      );
+      if (topicFunctionAbi) {
+        contractFunctionAbi[selector as Hex] = topicFunctionAbi as AbiFunction;
+      }
+    }
+    abi[address as Address] = {
+      functions: contractFunctionAbi,
+      events: contractEventAbi,
+    };
+  }
+  return abi;
+}
+
+async function fetchContractAbi(
   chain: ChainId,
   address: Address,
 ): Promise<Abi | null> {
@@ -122,63 +177,6 @@ async function getContractAbi(
     implementation,
   );
   return implementationContract.value.abi;
-}
-
-async function getEventAbi(
-  chain: ChainId,
-  selectors: Record<string, string[]>,
-): Promise<Record<Address, Record<Hex, AbiEvent>>> {
-  const eventAbi: Record<Address, Record<Hex, AbiEvent>> = {};
-  for (const address in selectors) {
-    const contractAbi = await getContractAbi(chain, address as Address);
-    if (!contractAbi) {
-      continue;
-    }
-    const contractEventAbi: Record<Hex, AbiEvent> = {};
-    const contractSelectors = selectors[address];
-    if (!contractSelectors) {
-      continue;
-    }
-    for (const selector of contractSelectors) {
-      const topicEventAbi = contractAbi.find(
-        (abi) => abi.type === 'event' && toEventSelector(abi) === selector,
-      );
-      if (topicEventAbi) {
-        contractEventAbi[selector as Hex] = topicEventAbi as AbiEvent;
-      }
-    }
-    eventAbi[address as Address] = contractEventAbi;
-  }
-  return eventAbi;
-}
-
-async function getFunctionAbi(
-  chain: ChainId,
-  selectors: Record<string, string[]>,
-): Promise<Record<Address, Record<Hex, AbiFunction>>> {
-  const functionAbi: Record<Address, Record<Hex, AbiFunction>> = {};
-  for (const address in selectors) {
-    const contractAbi = await getContractAbi(chain, address as Address);
-    if (!contractAbi) {
-      continue;
-    }
-    const contractFunctionAbi: Record<Hex, AbiFunction> = {};
-    const contractSelectors = selectors[address];
-    if (!contractSelectors) {
-      continue;
-    }
-    for (const selector of contractSelectors) {
-      const topicFunctionAbi = contractAbi.find(
-        (abi) =>
-          abi.type === 'function' && toFunctionSelector(abi) === selector,
-      );
-      if (topicFunctionAbi) {
-        contractFunctionAbi[selector as Hex] = topicFunctionAbi as AbiFunction;
-      }
-    }
-    functionAbi[address as Address] = contractFunctionAbi;
-  }
-  return functionAbi;
 }
 
 async function fetchContract(
@@ -223,4 +221,4 @@ async function fetchContract(
   };
 }
 
-export { getContractSource, getEventAbi, getFunctionAbi };
+export { getSource, getAbi };

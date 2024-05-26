@@ -5,7 +5,7 @@ import { z } from 'zod';
 
 import { chainSchema, parseChainId } from '@/utils/chains';
 
-import { getContractSource, getEventAbi, getFunctionAbi } from './controller';
+import { getAbi, getSource } from './controller';
 
 const router = new Hono()
   .get(
@@ -20,15 +20,12 @@ const router = new Hono()
     async (c) => {
       const { address, chain } = c.req.valid('query');
       const chainId = parseChainId(chain);
-      const contract = await getContractSource(
-        chainId,
-        address.toLowerCase() as Address,
-      );
-      return c.json(contract);
+      const source = await getSource(chainId, address.toLowerCase() as Address);
+      return c.json(source);
     },
   )
   .post(
-    '/abi/events',
+    '/abi',
     zValidator(
       'query',
       z.object({
@@ -38,37 +35,21 @@ const router = new Hono()
     zValidator(
       'json',
       z.object({
-        selectors: z.record(z.string(), z.array(z.string())),
+        contracts: z.record(
+          z.string(),
+          z.object({
+            functions: z.array(z.string()),
+            events: z.array(z.string()),
+          }),
+        ),
       }),
     ),
     async (c) => {
       const { chain } = c.req.valid('query');
-      const { selectors } = c.req.valid('json');
+      const { contracts } = c.req.valid('json');
       const chainId = parseChainId(chain);
-      const events = await getEventAbi(chainId, selectors);
-      return c.json(events);
-    },
-  )
-  .post(
-    '/abi/functions',
-    zValidator(
-      'query',
-      z.object({
-        chain: chainSchema,
-      }),
-    ),
-    zValidator(
-      'json',
-      z.object({
-        selectors: z.record(z.string(), z.array(z.string())),
-      }),
-    ),
-    async (c) => {
-      const { chain } = c.req.valid('query');
-      const { selectors } = c.req.valid('json');
-      const chainId = parseChainId(chain);
-      const functions = await getFunctionAbi(chainId, selectors);
-      return c.json(functions);
+      const abi = await getAbi(chainId, contracts);
+      return c.json(abi);
     },
   );
 
