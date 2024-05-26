@@ -136,6 +136,11 @@ class Service {
     const { language, compiler, compilerVersion } = parseCompiler(
       result.CompilerVersion,
     );
+    // Ignore the implementation if it's the same as the address
+    const implementation =
+      result.Implementation === address
+        ? null
+        : (result.Implementation as Address);
     return {
       source: {
         name: result.ContractName,
@@ -156,7 +161,7 @@ class Service {
       },
       abi: JSON.parse(result.ABI) as Abi,
       isProxy: result.Proxy === '1',
-      implementation: result.Implementation as Address,
+      implementation,
     };
   }
 }
