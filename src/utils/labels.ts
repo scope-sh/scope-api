@@ -1,3 +1,5 @@
+import { Address } from 'viem';
+
 import { type ChainId } from './chains.js';
 
 type LabelId =
@@ -25,7 +27,7 @@ type LabelId =
   | 'uniswap-v2-pool'
   | 'uniswap-v3-pool';
 
-type ChainLabelMap = Record<string, Label>;
+type ChainLabelMap = Record<Address, Label[]>;
 type LabelMap = Record<ChainId, ChainLabelMap>;
 
 interface LabelType {

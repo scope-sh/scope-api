@@ -11,10 +11,10 @@ const minioSecretKey = process.env.MINIO_SECRET_KEY as string;
 const minioBucket = process.env.MINIO_BUCKET as string;
 
 type LabelWithAddress = Label & {
-  address: string;
+  address: Address;
 };
 
-const labels: Partial<Record<ChainId, Record<string, Label>>> = {};
+const labels: Partial<Record<ChainId, Record<string, Label[]>>> = {};
 const labelIndex: Partial<
   Record<ChainId, MiniSearch<LabelWithAddress> | null>
 > = {};
@@ -28,7 +28,7 @@ function getAllAddressLabels(chainId: ChainId, address: Address): Label[] {
   if (!addressLabels) {
     return [];
   }
-  return [addressLabels];
+  return addressLabels;
 }
 
 function getPrimaryAddressLabels(
@@ -46,7 +46,11 @@ function getPrimaryAddressLabels(
       if (!label) {
         continue;
       }
-      foundLabels[address] = label;
+      const primaryLabel = label[0];
+      if (!primaryLabel) {
+        continue;
+      }
+      foundLabels[address] = primaryLabel;
     }
   }
   return foundLabels;
@@ -66,31 +70,23 @@ async function searchLabels(
     return [];
   }
   if (query === '') {
-    return Object.keys(chainLabels)
-      .slice(0, LIMIT)
-      .map((address) => {
-        const label = chainLabels[address];
-        if (!label) {
-          return null;
-        }
-        return {
-          address,
-          ...label,
-        };
-      })
-      .filter((label): label is LabelWithAddress => label !== null);
+    return [];
   }
   const results = chainIndex.search(query);
   return results
     .slice(0, LIMIT)
     .map((result) => {
       const address = result.id;
-      const label = chainLabels[address];
-      if (!label) {
+      const labels = chainLabels[address];
+      if (!labels) {
+        return null;
+      }
+      const primaryLabel = labels[0];
+      if (!primaryLabel) {
         return null;
       }
       return {
-        ...label,
+        ...primaryLabel,
         address,
       };
     })
@@ -117,30 +113,27 @@ async function fetchChainLabels(chain: ChainId): Promise<void> {
   labels[chain] = chainLabels;
   const labelList = Object.keys(chainLabels)
     .map((address) => {
-      const label = chainLabels[address];
-      if (!label) {
-        return null;
+      const labels = chainLabels[address as Address];
+      if (!labels) {
+        return [];
       }
-      return {
-        ...label,
-        address,
-      };
+      return labels.map((label) => {
+        return {
+          ...label,
+          address: address as Address,
+        };
+      });
     })
+    .flat()
     .filter((label): label is LabelWithAddress => label !== null);
   labelIndex[chain] = new MiniSearch<LabelWithAddress>({
     fields: ['value', 'type', 'namespace'],
     extractField: (doc, fieldName): string => {
-      if (fieldName === 'address') {
-        return doc.address;
-      }
       if (fieldName === 'value') {
         return doc.value;
       }
       if (fieldName === 'namespace' && doc.namespace) {
         return doc.namespace.value;
-      }
-      if (fieldName === 'type' && doc.type) {
-        return doc.type.value;
       }
       return '';
     },
