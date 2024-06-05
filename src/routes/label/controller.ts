@@ -52,6 +52,21 @@ function getLabelsByAddressList(
   return foundLabels;
 }
 
+function getSingleAddressLabels(chainId: ChainId, address: Address): Label[] {
+  const label = getLabelByAddress(chainId, address);
+  if (!label) {
+    return [];
+  }
+  return [label];
+}
+
+function getMultipleAddressLabels(
+  chainId: ChainId,
+  addresses: Address[],
+): Record<Address, Label> {
+  return getLabelsByAddressList(chainId, addresses);
+}
+
 async function searchLabels(
   chainId: ChainId,
   query: string,
@@ -159,4 +174,11 @@ async function fetchChainLabels(chain: ChainId): Promise<void> {
   console.info(`Fetched labels for chain ${chain}`);
 }
 
-export { getLabelByAddress, getLabelsByAddressList, searchLabels, fetchLabels };
+export {
+  getLabelByAddress,
+  getLabelsByAddressList,
+  getSingleAddressLabels,
+  getMultipleAddressLabels,
+  searchLabels,
+  fetchLabels,
+};
