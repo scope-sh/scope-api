@@ -8,8 +8,8 @@ import { chainSchema, parseChainId } from '@/utils/chains';
 import {
   getLabelByAddress,
   getLabelsByAddressList,
-  getSingleAddressLabels,
-  getMultipleAddressLabels,
+  getAllAddressLabels,
+  getPrimaryAddressLabels,
   searchLabels,
   fetchLabels,
 } from './controller';
@@ -70,7 +70,7 @@ const router = new Hono()
     },
   )
   .get(
-    '/single',
+    '/all',
     updateCacheIfStale,
     zValidator(
       'query',
@@ -82,12 +82,12 @@ const router = new Hono()
     async (c) => {
       const { address, chain } = c.req.valid('query');
       const chainId = parseChainId(chain);
-      const labels = getSingleAddressLabels(chainId, address as Address);
+      const labels = getAllAddressLabels(chainId, address as Address);
       return c.json(labels);
     },
   )
   .post(
-    '/multiple',
+    '/primary',
     updateCacheIfStale,
     zValidator(
       'query',
@@ -105,7 +105,7 @@ const router = new Hono()
       const { chain } = c.req.valid('query');
       const { addresses } = c.req.valid('json');
       const chainId = parseChainId(chain);
-      const labels = getMultipleAddressLabels(chainId, addresses as Address[]);
+      const labels = getPrimaryAddressLabels(chainId, addresses as Address[]);
       return c.json(labels);
     },
   )
