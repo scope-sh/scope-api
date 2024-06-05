@@ -19,28 +19,28 @@ const labelIndex: Partial<
   Record<ChainId, MiniSearch<LabelWithAddress> | null>
 > = {};
 
-function getLabelByAddress(chainId: ChainId, address: string): Label | null {
+function getAllAddressLabels(chainId: ChainId, address: Address): Label[] {
   const chainLabels = labels[chainId];
   if (!chainLabels) {
-    return null;
+    return [];
   }
-  if (address in chainLabels) {
-    return chainLabels[address] || null;
-  } else {
-    return null;
+  const addressLabels = chainLabels[address];
+  if (!addressLabels) {
+    return [];
   }
+  return [addressLabels];
 }
 
-function getLabelsByAddressList(
+function getPrimaryAddressLabels(
   chainId: ChainId,
-  addressList: Address[],
+  addresses: Address[],
 ): Record<Address, Label> {
   const foundLabels: Record<Address, Label> = {};
   const chainLabels = labels[chainId];
   if (!chainLabels) {
     return {};
   }
-  for (const address of addressList) {
+  for (const address of addresses) {
     if (address in chainLabels) {
       const label = chainLabels[address];
       if (!label) {
@@ -50,21 +50,6 @@ function getLabelsByAddressList(
     }
   }
   return foundLabels;
-}
-
-function getAllAddressLabels(chainId: ChainId, address: Address): Label[] {
-  const label = getLabelByAddress(chainId, address);
-  if (!label) {
-    return [];
-  }
-  return [label];
-}
-
-function getPrimaryAddressLabels(
-  chainId: ChainId,
-  addresses: Address[],
-): Record<Address, Label> {
-  return getLabelsByAddressList(chainId, addresses);
 }
 
 async function searchLabels(
@@ -175,8 +160,6 @@ async function fetchChainLabels(chain: ChainId): Promise<void> {
 }
 
 export {
-  getLabelByAddress,
-  getLabelsByAddressList,
   getAllAddressLabels,
   getPrimaryAddressLabels,
   searchLabels,

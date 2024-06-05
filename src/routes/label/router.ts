@@ -6,8 +6,6 @@ import { z } from 'zod';
 import { chainSchema, parseChainId } from '@/utils/chains';
 
 import {
-  getLabelByAddress,
-  getLabelsByAddressList,
   getAllAddressLabels,
   getPrimaryAddressLabels,
   searchLabels,
@@ -29,46 +27,6 @@ async function updateCacheIfStale(_c: Context, next: Next): Promise<void> {
 }
 
 const router = new Hono()
-  .get(
-    '/one',
-    updateCacheIfStale,
-    zValidator(
-      'query',
-      z.object({
-        address: z.string(),
-        chain: chainSchema,
-      }),
-    ),
-    async (c) => {
-      const { address, chain } = c.req.valid('query');
-      const chainId = parseChainId(chain);
-      const label = getLabelByAddress(chainId, address as Address);
-      return c.json(label);
-    },
-  )
-  .post(
-    '/many',
-    updateCacheIfStale,
-    zValidator(
-      'query',
-      z.object({
-        chain: chainSchema,
-      }),
-    ),
-    zValidator(
-      'json',
-      z.object({
-        addresses: z.array(z.string()),
-      }),
-    ),
-    async (c) => {
-      const { chain } = c.req.valid('query');
-      const { addresses } = c.req.valid('json');
-      const chainId = parseChainId(chain);
-      const labels = getLabelsByAddressList(chainId, addresses as Address[]);
-      return c.json(labels);
-    },
-  )
   .get(
     '/all',
     updateCacheIfStale,
