@@ -20,7 +20,7 @@ type LabelWithAddressAndId = LabelWithAddress & {
 
 const labels: Partial<Record<ChainId, Record<string, Label[]>>> = {};
 const labelIndex: Partial<
-  Record<ChainId, MiniSearch<LabelWithAddress> | null>
+  Record<ChainId, MiniSearch<LabelWithAddressAndId> | null>
 > = {};
 
 function getAllAddressLabels(chainId: ChainId, address: Address): Label[] {
@@ -133,9 +133,12 @@ async function fetchChainLabels(chain: ChainId): Promise<void> {
     })
     .flat()
     .filter((label): label is LabelWithAddressAndId => label !== null);
-  labelIndex[chain] = new MiniSearch<LabelWithAddress>({
+  labelIndex[chain] = new MiniSearch<LabelWithAddressAndId>({
     fields: ['value', 'type', 'namespace'],
     extractField: (doc, fieldName): string => {
+      if (fieldName === 'id') {
+        return doc.id;
+      }
       if (fieldName === 'value') {
         return doc.value;
       }
@@ -144,7 +147,6 @@ async function fetchChainLabels(chain: ChainId): Promise<void> {
       }
       return '';
     },
-    idField: 'id',
     searchOptions: {
       boost: { keywords: 5 },
       fuzzy: 0.1,
