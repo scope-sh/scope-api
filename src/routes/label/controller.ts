@@ -14,6 +14,10 @@ type LabelWithAddress = Label & {
   address: Address;
 };
 
+type LabelWithAddressAndId = LabelWithAddress & {
+  id: string;
+};
+
 const labels: Partial<Record<ChainId, Record<string, Label[]>>> = {};
 const labelIndex: Partial<
   Record<ChainId, MiniSearch<LabelWithAddress> | null>
@@ -76,12 +80,14 @@ async function searchLabels(
   return results
     .slice(0, LIMIT)
     .map((result) => {
-      const address = result.id;
+      const id = result.id;
+      const [address, indexString] = id.split('-');
+      const index = parseInt(indexString);
       const labels = chainLabels[address];
       if (!labels) {
         return null;
       }
-      const primaryLabel = labels[0];
+      const primaryLabel = labels[index];
       if (!primaryLabel) {
         return null;
       }
@@ -117,15 +123,16 @@ async function fetchChainLabels(chain: ChainId): Promise<void> {
       if (!labels) {
         return [];
       }
-      return labels.map((label) => {
+      return labels.map((label, index) => {
         return {
           ...label,
           address: address as Address,
+          id: `${address}-${index}`,
         };
       });
     })
     .flat()
-    .filter((label): label is LabelWithAddress => label !== null);
+    .filter((label): label is LabelWithAddressAndId => label !== null);
   labelIndex[chain] = new MiniSearch<LabelWithAddress>({
     fields: ['value', 'type', 'namespace'],
     extractField: (doc, fieldName): string => {
@@ -137,7 +144,7 @@ async function fetchChainLabels(chain: ChainId): Promise<void> {
       }
       return '';
     },
-    idField: 'address',
+    idField: 'id',
     searchOptions: {
       boost: { keywords: 5 },
       fuzzy: 0.1,
