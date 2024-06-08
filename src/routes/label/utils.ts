@@ -116,7 +116,7 @@ function getNamespaceIcon(namespaceId: NamespaceId): string | undefined {
   if (!iconName) {
     return undefined;
   }
-  return `https://api.scope.sh/assets/icons/${iconName}.svg`;
+  return `https://api.scope.sh/static/icons/${iconName}.svg`;
 }
 
 export { getErc20Icon, getNamespaceIcon };
