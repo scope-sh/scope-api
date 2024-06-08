@@ -143,7 +143,6 @@ async function fetchChainLabels(chain: ChainId): Promise<void> {
           ...label,
           address,
           id: `${address}-${index}`,
-          iconUrl: getIconUrl(chain, address, label),
         };
       });
     })
