@@ -27,6 +27,41 @@ type LabelId =
   | 'uniswap-v2-pool'
   | 'uniswap-v3-pool';
 
+type NamespaceId =
+  | 'aave-v2'
+  | 'aave-v3'
+  | 'alchemy'
+  | 'biconomy'
+  | 'biconomy-v2'
+  | 'blocto'
+  | 'candide'
+  | 'circle'
+  | 'coinbase-smart-wallet'
+  | 'daimo'
+  | 'ethereum-attestation-service'
+  | 'ens'
+  | 'etherspot'
+  | 'farcaster'
+  | 'fun'
+  | 'light-v0.1'
+  | 'light-v0.2'
+  | 'nani'
+  | 'opensea-seaport'
+  | 'parifi-v1'
+  | 'particle'
+  | 'patch-wallet'
+  | 'pimlico'
+  | 'rhinestone-v1'
+  | 'safe-core'
+  | 'safe'
+  | 'stackup'
+  | 'unipass'
+  | 'uniswap-v2'
+  | 'uniswap-v3'
+  | 'zerodev'
+  | 'zerodev-kernel-v2'
+  | 'zerodev-kernel-v3';
+
 type ChainLabelMap = Record<Address, Label[]>;
 type LabelMap = Record<ChainId, ChainLabelMap>;
 
@@ -36,7 +71,7 @@ interface LabelType {
 }
 
 interface LabelNamespace {
-  id: string;
+  id: NamespaceId;
   value: string;
 }
 
@@ -44,8 +79,8 @@ interface Label {
   value: string;
   namespace?: LabelNamespace;
   type?: LabelType;
-  iconUrl?: string;
+  iconUrl: string | undefined;
   metadata?: Record<string, unknown>;
 }
 
-export type { ChainLabelMap, Label, LabelId, LabelType, LabelMap };
+export type { ChainLabelMap, Label, LabelId, LabelType, LabelMap, NamespaceId };

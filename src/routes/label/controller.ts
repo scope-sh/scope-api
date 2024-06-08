@@ -5,6 +5,8 @@ import MinioService from '@/services/minio';
 import { CHAINS, ChainId } from '@/utils/chains';
 import { Label } from '@/utils/labels';
 
+import { getErc20Icon, getNamespaceIcon } from './utils';
+
 const minioPublicEndpoint = process.env.MINIO_PUBLIC_ENDPOINT as string;
 const minioAccessKey = process.env.MINIO_ACCESS_KEY as string;
 const minioSecretKey = process.env.MINIO_SECRET_KEY as string;
@@ -14,14 +16,13 @@ type LabelWithAddress = Label & {
   address: Address;
 };
 
-type LabelWithAddressAndId = LabelWithAddress & {
+type IndexedLabel = LabelWithAddress & {
   id: string;
 };
 
 const labels: Partial<Record<ChainId, Record<string, Label[]>>> = {};
-const labelIndex: Partial<
-  Record<ChainId, MiniSearch<LabelWithAddressAndId> | null>
-> = {};
+const labelIndex: Partial<Record<ChainId, MiniSearch<IndexedLabel> | null>> =
+  {};
 
 function getAllAddressLabels(chainId: ChainId, address: Address): Label[] {
   const chainLabels = labels[chainId];
@@ -116,24 +117,39 @@ async function fetchChainLabels(chain: ChainId): Promise<void> {
   if (!chainLabels) {
     return;
   }
-  labels[chain] = chainLabels;
+  labels[chain] = Object.fromEntries(
+    Object.entries(chainLabels).map(([addressString, labels]) => {
+      const address = addressString as Address;
+      return [
+        address,
+        labels.map((label) => {
+          return {
+            ...label,
+            iconUrl: getIconUrl(chain, address, label),
+          };
+        }),
+      ];
+    }),
+  );
   const labelList = Object.keys(chainLabels)
-    .map((address) => {
-      const labels = chainLabels[address as Address];
+    .map((addressString) => {
+      const address = addressString as Address;
+      const labels = chainLabels[address];
       if (!labels) {
         return [];
       }
       return labels.map((label, index) => {
         return {
           ...label,
-          address: address as Address,
+          address,
           id: `${address}-${index}`,
+          iconUrl: getIconUrl(chain, address, label),
         };
       });
     })
     .flat()
-    .filter((label): label is LabelWithAddressAndId => label !== null);
-  labelIndex[chain] = new MiniSearch<LabelWithAddressAndId>({
+    .filter((label): label is IndexedLabel => label !== null);
+  labelIndex[chain] = new MiniSearch<IndexedLabel>({
     fields: ['value', 'type', 'namespace'],
     extractField: (doc, fieldName): string => {
       if (fieldName === 'id') {
@@ -159,6 +175,23 @@ async function fetchChainLabels(chain: ChainId): Promise<void> {
     }
   }
   console.info(`Fetched labels for chain ${chain}`);
+}
+
+function getIconUrl(
+  chain: ChainId,
+  address: Address,
+  label: Label,
+): string | undefined {
+  if (label.iconUrl) {
+    return label.iconUrl;
+  }
+  if (label.type && label.type.id === 'erc20') {
+    return getErc20Icon(chain, address);
+  }
+  if (label.namespace) {
+    return getNamespaceIcon(label.namespace.id);
+  }
+  return undefined;
 }
 
 export {
