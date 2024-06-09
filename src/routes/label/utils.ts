@@ -54,7 +54,7 @@ function getNamespaceIcon(namespaceId: NamespaceId): string | undefined {
       case 'aave-v3':
         return 'aave';
       case 'alchemy':
-        return undefined;
+        return 'alchemy';
       case 'biconomy':
       case 'biconomy-v2':
         return 'biconomy';
