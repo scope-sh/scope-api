@@ -97,7 +97,7 @@ async function searchLabels(
         address,
       };
     })
-    .filter((label): label is LabelWithAddress => label !== null);
+    .filter((label) => label !== null);
 }
 
 async function fetchLabels(): Promise<void> {
@@ -147,7 +147,7 @@ async function fetchChainLabels(chain: ChainId): Promise<void> {
       });
     })
     .flat()
-    .filter((label): label is IndexedLabel => label !== null);
+    .filter((label) => label !== null);
   labelIndex[chain] = new MiniSearch<IndexedLabel>({
     fields: ['value', 'type', 'namespace'],
     extractField: (doc, fieldName): string => {

@@ -49,7 +49,7 @@ async function getStorage(
   const results = await Promise.all(
     slots.map((slot) => client.getStorageAt({ address, slot })),
   );
-  return results.filter((result): result is Hex => !!result);
+  return results.filter((result) => !!result);
 }
 
 function toAddress(slotValue: Hex | null): Address | null {
