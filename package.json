@@ -25,7 +25,9 @@
   },
   "dependencies": {
     "@hono/zod-validator": "^0.2.1",
+    "@libsql/client": "^0.6.2",
     "axios": "^1.6.8",
+    "drizzle-orm": "^0.31.2",
     "evm-providers": "^0.4.5",
     "hono": "^4.2.2",
     "minio": "^7.1.3",
