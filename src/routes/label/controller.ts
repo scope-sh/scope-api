@@ -35,9 +35,10 @@ async function getPrimaryAddressLabels(
 
 async function searchLabels(
   chainId: ChainId,
-  query: string,
+  rawQuery: string,
 ): Promise<LabelWithAddress[]> {
   const LIMIT = 20;
+  const query = rawQuery.replace(/[^a-zA-Z0-9 ]/g, ' ');
   return await getLabelsByQuery(chainId, query, LIMIT);
 }
 
