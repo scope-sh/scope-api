@@ -5,6 +5,8 @@ import { type ChainId } from './chains.js';
 type LabelId =
   | 'wrapped'
   | 'erc20'
+  | 'erc721'
+  | 'erc1155'
   | 'aave-v2-atoken'
   | 'aave-v2-variable-debt-token'
   | 'aave-v2-stable-debt-token'
@@ -83,4 +85,12 @@ interface Label {
   metadata?: Record<string, unknown>;
 }
 
-export type { ChainLabelMap, Label, LabelId, LabelType, LabelMap, NamespaceId };
+export type {
+  ChainLabelMap,
+  Label,
+  LabelId,
+  LabelType,
+  LabelNamespace,
+  LabelMap,
+  NamespaceId,
+};

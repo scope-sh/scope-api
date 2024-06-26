@@ -9,18 +9,14 @@ import {
   getAllAddressLabels,
   getPrimaryAddressLabels,
   searchLabels,
-  fetchLabels,
 } from './controller';
 
 const CACHE_DURATION = 1000 * 60 * 60 * 24;
 let lastUpdate = Date.now();
 
-await fetchLabels();
-
 async function updateCacheIfStale(_c: Context, next: Next): Promise<void> {
   const now = Date.now();
   if (now - lastUpdate > CACHE_DURATION) {
-    fetchLabels();
     lastUpdate = now;
   }
   await next();
@@ -40,7 +36,7 @@ const router = new Hono()
     async (c) => {
       const { address, chain } = c.req.valid('query');
       const chainId = parseChainId(chain);
-      const labels = getAllAddressLabels(chainId, address as Address);
+      const labels = await getAllAddressLabels(chainId, address as Address);
       return c.json(labels);
     },
   )
@@ -63,7 +59,10 @@ const router = new Hono()
       const { chain } = c.req.valid('query');
       const { addresses } = c.req.valid('json');
       const chainId = parseChainId(chain);
-      const labels = getPrimaryAddressLabels(chainId, addresses as Address[]);
+      const labels = await getPrimaryAddressLabels(
+        chainId,
+        addresses as Address[],
+      );
       return c.json(labels);
     },
   )

@@ -4,7 +4,6 @@ import * as Minio from 'minio';
 import { Abi, Address } from 'viem';
 
 import { ChainId } from '@/utils/chains';
-import { ChainLabelMap } from '@/utils/labels';
 import { SourceCode } from '@/utils/sources';
 
 interface Contract {
@@ -53,17 +52,6 @@ class Service {
       accessKey,
       secretKey,
     });
-  }
-
-  async getLabels(chain: ChainId): Promise<ChainLabelMap> {
-    const key = `labels/${chain}.json`;
-    try {
-      const file = await this.client.getObject(this.bucket, key);
-      const fileString = await streamToString(file);
-      return JSON.parse(fileString);
-    } catch (e) {
-      return {};
-    }
   }
 
   async getContract(
