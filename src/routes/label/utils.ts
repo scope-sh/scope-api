@@ -14,14 +14,14 @@ import {
   SEPOLIA,
 } from '@/utils/chains';
 import {
-  LabelId,
-  LabelNamespace,
   LabelType,
-  NamespaceId,
+  LabelTypeId,
+  LabelNamespace,
+  LabelNamespaceId,
 } from '@/utils/labels';
 
-function getLabelTypeById(value: LabelId): LabelType {
-  function getLabelTypeValue(value: LabelId): string {
+function getLabelTypeById(value: LabelTypeId): LabelType {
+  function getLabelTypeValue(value: LabelTypeId): string {
     switch (value) {
       case 'erc20':
         return 'ERC20';
@@ -94,8 +94,8 @@ function getLabelTypeById(value: LabelId): LabelType {
   };
 }
 
-function getNamespaceById(id: NamespaceId): LabelNamespace {
-  function getNamespaceValue(id: NamespaceId): string {
+function getNamespaceById(id: LabelNamespaceId): LabelNamespace {
+  function getNamespaceValue(id: LabelNamespaceId): string {
     switch (id) {
       case 'aave-v2':
         return 'Aave V2';
@@ -210,8 +210,8 @@ function getErc20Icon(chain: ChainId, address: string): string | undefined {
   return `https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/${chainName}/assets/${getAddress(address)}/logo.png`;
 }
 
-function getNamespaceIcon(namespaceId: NamespaceId): string | undefined {
-  function getIconName(namespaceId: NamespaceId): string | undefined {
+function getNamespaceIcon(namespaceId: LabelNamespaceId): string | undefined {
+  function getIconName(namespaceId: LabelNamespaceId): string | undefined {
     switch (namespaceId) {
       case 'aave-v2':
       case 'aave-v3':

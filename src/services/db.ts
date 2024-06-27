@@ -11,7 +11,7 @@ import {
   getNamespaceIcon,
 } from '@/routes/label/utils';
 import { ChainId } from '@/utils/chains.js';
-import { Label, LabelId, NamespaceId } from '@/utils/labels.js';
+import { Label, LabelTypeId, LabelNamespaceId } from '@/utils/labels.js';
 
 const databaseUrl = process.env.DATABASE_URL as string;
 
@@ -73,16 +73,16 @@ function rowToLabel(row: LabelRow): LabelWithAddress {
   return {
     address: row.address as Address,
     value: row.value,
-    type: row.typeId ? getLabelTypeById(row.typeId as LabelId) : undefined,
+    type: row.typeId ? getLabelTypeById(row.typeId as LabelTypeId) : undefined,
     namespace: row.namespaceId
-      ? getNamespaceById(row.namespaceId as NamespaceId)
+      ? getNamespaceById(row.namespaceId as LabelNamespaceId)
       : undefined,
     iconUrl: getIconUrl(
       row.chain as ChainId,
       row.address as Address,
       row.iconUrl || null,
-      (row.typeId as LabelId) || null,
-      (row.namespaceId as NamespaceId) || null,
+      (row.typeId as LabelTypeId) || null,
+      (row.namespaceId as LabelNamespaceId) || null,
     ),
   };
 }
@@ -91,8 +91,8 @@ function getIconUrl(
   chain: ChainId,
   address: Address,
   originalIconUrl: string | null,
-  typeId: LabelId | null,
-  namespaceId: NamespaceId | null,
+  typeId: LabelTypeId | null,
+  namespaceId: LabelNamespaceId | null,
 ): string | undefined {
   if (originalIconUrl) {
     return originalIconUrl;
