@@ -246,6 +246,8 @@ function getNamespaceIcon(namespaceId: LabelNamespaceId): string | undefined {
         return 'light';
       case 'nani':
         return undefined;
+      case 'openfort':
+        return undefined;
       case 'opensea-seaport':
         return 'opensea';
       case 'parifi-v1':
@@ -263,12 +265,15 @@ function getNamespaceIcon(namespaceId: LabelNamespaceId): string | undefined {
         return 'safe';
       case 'stackup':
         return 'stackup';
+      case 'thirdweb':
+        return undefined;
       case 'unipass':
         return undefined;
       case 'uniswap-v2':
       case 'uniswap-v3':
         return 'uniswap';
       case 'zerodev':
+      case 'zerodev-kernel-v1':
       case 'zerodev-kernel-v2':
       case 'zerodev-kernel-v3':
         return 'zerodev';
