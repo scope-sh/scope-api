@@ -19,6 +19,29 @@ type LabelWithAddress = Label & {
   address: Address;
 };
 
+async function getIndexedLabels(chain: ChainId): Promise<LabelWithAddress[]> {
+  const db = getDb();
+  const perPage = 10_000;
+  let page = 0;
+  let indexedLabels: LabelWithAddress[] = [];
+
+  while (indexedLabels.length === page * perPage) {
+    const rows = await db
+      .select()
+      .from(labels)
+      .where(and(eq(labels.chain, chain), eq(labels.indexed, true)))
+      .limit(perPage)
+      .offset(page * perPage)
+      .execute();
+
+    const pageLabels = rows.map(rowToLabel);
+    indexedLabels = indexedLabels.concat(pageLabels);
+    page++;
+  }
+
+  return indexedLabels;
+}
+
 async function getAddressLabels(
   chain: ChainId,
   addresses: Address[],
@@ -113,5 +136,5 @@ function getDb(): LibSQLDatabase {
   return drizzle(client);
 }
 
-export { searchLabels, getAddressLabels };
+export { getIndexedLabels, searchLabels, getAddressLabels };
 export type { LabelWithAddress };

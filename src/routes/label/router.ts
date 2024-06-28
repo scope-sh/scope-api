@@ -9,14 +9,18 @@ import {
   getAllAddressLabels,
   getPrimaryAddressLabels,
   searchLabels,
+  fetchLabels,
 } from './controller';
 
 const CACHE_DURATION = 1000 * 60 * 60 * 24;
 let lastUpdate = Date.now();
 
+await fetchLabels();
+
 async function updateCacheIfStale(_c: Context, next: Next): Promise<void> {
   const now = Date.now();
   if (now - lastUpdate > CACHE_DURATION) {
+    fetchLabels();
     lastUpdate = now;
   }
   await next();
