@@ -63,6 +63,10 @@ function getLabelTypeById(value: LabelTypeId): LabelType {
         return 'Kernel V2 Account';
       case 'kernel-v3-account':
         return 'Kernel V3 Account';
+      case 'entry-point-v0.6.0-account':
+        return 'Entry Point V0.6.0 Account';
+      case 'entry-point-v0.7.0-account':
+        return 'Entry Point V0.7.0 Account';
       case 'erc7579-module':
         return 'ERC7579 Module';
       case 'fun-v1-account':
