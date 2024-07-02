@@ -188,7 +188,7 @@ async function fetchContract(
   const cachedCode = await minioService.getContract(chain, address);
   if (cachedCode) {
     if (
-      !cachedCode.value ||
+      !!cachedCode.value ||
       cachedCode.timestamp > Date.now() - NO_SOURCE_CACHE_DURATION
     ) {
       return {
