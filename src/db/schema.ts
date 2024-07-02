@@ -1,13 +1,20 @@
-import { integer, text, sqliteTable, index } from 'drizzle-orm/sqlite-core';
+import {
+  integer,
+  serial,
+  text,
+  pgTable,
+  index,
+  boolean,
+} from 'drizzle-orm/pg-core';
 
-const labels = sqliteTable(
+const labels = pgTable(
   'labels',
   {
-    id: integer('id').primaryKey(),
+    id: serial('id').primaryKey(),
     chain: integer('chain').notNull(),
     address: text('address').notNull(),
     value: text('value').notNull(),
-    indexed: integer('indexed', { mode: 'boolean' }).notNull(),
+    indexed: boolean('indexed').notNull(),
     typeId: text('type_id'),
     namespaceId: text('namespace_id'),
     iconUrl: text('icon_url'),
@@ -19,14 +26,7 @@ const labels = sqliteTable(
   },
 );
 
-const labelSearch = sqliteTable('label_search', {
-  rowid: integer('rowid').primaryKey(),
-  chain: integer('chain').notNull(),
-  value: text('value').notNull(),
-});
-
 type Label = typeof labels.$inferInsert;
-type LabelSearch = typeof labelSearch.$inferInsert;
 
-export { labels, labelSearch };
-export type { Label, LabelSearch };
+export { labels };
+export type { Label };

@@ -1,6 +1,6 @@
-import { createClient } from '@libsql/client';
-import { and, eq, inArray, sql } from 'drizzle-orm';
-import { LibSQLDatabase, drizzle } from 'drizzle-orm/libsql';
+import { and, eq, inArray } from 'drizzle-orm';
+import { NodePgDatabase, drizzle } from 'drizzle-orm/node-postgres';
+import { Client } from 'pg';
 import { Address } from 'viem';
 
 import { type Label as LabelRow, labels } from '@/db/schema';
@@ -18,6 +18,11 @@ const databaseUrl = process.env.DATABASE_URL as string;
 type LabelWithAddress = Label & {
   address: Address;
 };
+
+const client = new Client({
+  connectionString: databaseUrl,
+});
+await client.connect();
 
 async function getIndexedLabels(chain: ChainId): Promise<LabelWithAddress[]> {
   const db = getDb();
@@ -94,10 +99,7 @@ function getIconUrl(
   return undefined;
 }
 
-function getDb(): LibSQLDatabase {
-  const client = createClient({
-    url: databaseUrl,
-  });
+function getDb(): NodePgDatabase {
   return drizzle(client);
 }
 
