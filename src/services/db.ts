@@ -3,7 +3,7 @@ import { and, eq, inArray, sql } from 'drizzle-orm';
 import { LibSQLDatabase, drizzle } from 'drizzle-orm/libsql';
 import { Address } from 'viem';
 
-import { type Label as LabelRow, labels, labelSearch } from '@/db/schema';
+import { type Label as LabelRow, labels } from '@/db/schema';
 import {
   getErc20Icon,
   getLabelTypeById,
@@ -57,41 +57,6 @@ async function getAddressLabels(
   return rows.map(rowToLabel);
 }
 
-async function searchLabels(
-  chain: ChainId,
-  query: string,
-  limit: number,
-): Promise<LabelWithAddress[]> {
-  const db = getDb();
-  const ids = await db
-    .select({ id: labelSearch.rowid })
-    .from(labelSearch)
-    .where(and(eq(labelSearch.chain, chain), sql.raw(`value MATCH '${query}'`)))
-    .orderBy(sql`rank`)
-    .limit(limit)
-    .execute();
-
-  if (ids.length === 0) {
-    return [];
-  }
-
-  const rows = await db
-    .select()
-    .from(labels)
-    .where(
-      and(
-        eq(labels.chain, chain),
-        inArray(
-          labels.id,
-          ids.map((id) => id.id),
-        ),
-      ),
-    )
-    .execute();
-
-  return rows.map(rowToLabel);
-}
-
 function rowToLabel(row: LabelRow): LabelWithAddress {
   return {
     address: row.address as Address,
@@ -136,5 +101,5 @@ function getDb(): LibSQLDatabase {
   return drizzle(client);
 }
 
-export { getIndexedLabels, searchLabels, getAddressLabels };
+export { getIndexedLabels, getAddressLabels };
 export type { LabelWithAddress };
