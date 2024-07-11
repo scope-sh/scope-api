@@ -89,10 +89,10 @@ async function fetchLabels(): Promise<void> {
 
 async function fetchChainLabels(chain: ChainId): Promise<void> {
   const indexedLabels = await getIndexedLabels(chain);
-  const chainLabels = labels[chain] || {};
+  const chainLabels = {} as Record<Address, Label[]>;
   for (const label of indexedLabels) {
     const address = label.address;
-    const addressLabels = chainLabels[address] || [];
+    const addressLabels = [];
     addressLabels.push(label);
     chainLabels[address] = addressLabels;
   }
