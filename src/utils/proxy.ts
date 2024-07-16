@@ -129,6 +129,14 @@ function isKnownNonProxy(chain: Chain | undefined, address: Address): boolean {
   if (address === '0xaac5d4240af87249b3f71bc8e4a2cae074a3e419') {
     return true;
   }
+  // Nani Factory V0.0.0
+  if (address === '0x000000000000dd366cc2e4432bb998e41dfd47c7') {
+    return true;
+  }
+  // Nani Factory V1.1.1
+  if (address === '0x0000000000008dd2574908774527fd6da397d75b') {
+    return true;
+  }
   return false;
 }
 
