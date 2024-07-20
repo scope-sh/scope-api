@@ -1,4 +1,4 @@
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, asc, eq, gt, inArray } from 'drizzle-orm';
 import { NodePgDatabase, drizzle } from 'drizzle-orm/node-postgres';
 import { Client } from 'pg';
 import { Address } from 'viem';
@@ -27,21 +27,27 @@ await client.connect();
 async function getIndexedLabels(chain: ChainId): Promise<LabelWithAddress[]> {
   const db = getDb();
   const perPage = 10_000;
-  let page = 0;
+  let cursor: number | null | undefined = null;
   let indexedLabels: LabelWithAddress[] = [];
 
-  while (indexedLabels.length === page * perPage) {
+  while (cursor !== undefined) {
     const rows = await db
       .select()
       .from(labels)
-      .where(and(eq(labels.chain, chain), eq(labels.indexed, true)))
+      .where(
+        and(
+          eq(labels.chain, chain),
+          eq(labels.indexed, true),
+          cursor ? gt(labels.id, cursor) : undefined,
+        ),
+      )
+      .orderBy(asc(labels.id))
       .limit(perPage)
-      .offset(page * perPage)
       .execute();
 
     const pageLabels = rows.map(rowToLabel);
     indexedLabels = indexedLabels.concat(pageLabels);
-    page++;
+    cursor = rows.at(-1)?.id;
   }
 
   return indexedLabels;
