@@ -100,15 +100,14 @@ class Service {
     | null
     | undefined
   > {
-    const data = await this.client
-      .get('', {
-        searchParams: {
-          module: 'contract',
-          action: 'getsourcecode',
-          address,
-        },
-      })
-      .json<SourceResponse>();
+    const response = await this.client.get('', {
+      searchParams: {
+        module: 'contract',
+        action: 'getsourcecode',
+        address,
+      },
+    });
+    const data = await response.json<SourceResponse>();
     if (data.status !== '1') {
       const error =
         typeof data.result === 'string' ? data.result : 'Unknown error';
