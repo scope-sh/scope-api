@@ -1,4 +1,4 @@
-import axios, { AxiosInstance } from 'axios';
+import ky, { KyInstance } from 'ky';
 import { Abi, Address } from 'viem';
 
 import {
@@ -47,19 +47,16 @@ interface SourceCodeResponse {
   >;
 }
 
-// Bun doesn't support brotli yet
-axios.defaults.headers.common['Accept-Encoding'] = 'gzip';
-
 const DEFAULT_PATH = '';
 
 class Service {
   chain: ChainId;
-  client: AxiosInstance;
+  client: KyInstance;
 
   constructor(chain: ChainId) {
     this.chain = chain;
-    this.client = axios.create({
-      baseURL: this.#getEndpointUrl(chain),
+    this.client = ky.create({
+      prefixUrl: this.#getEndpointUrl(chain),
     });
   }
 
@@ -103,12 +100,15 @@ class Service {
     | null
     | undefined
   > {
-    // Using axios to send an HTTP request hangs Bun
-    // Using fetch as a workaround
-    const response = await fetch(
-      `${this.client.defaults.baseURL}?module=contract&action=getsourcecode&address=${address}`,
-    );
-    const data = (await response.json()) as SourceResponse;
+    const data = await this.client
+      .get('', {
+        searchParams: {
+          module: 'contract',
+          action: 'getsourcecode',
+          address,
+        },
+      })
+      .json<SourceResponse>();
     if (data.status !== '1') {
       const error =
         typeof data.result === 'string' ? data.result : 'Unknown error';
