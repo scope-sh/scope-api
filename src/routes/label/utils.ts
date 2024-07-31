@@ -135,6 +135,8 @@ function getNamespaceById(id: LabelNamespaceId): LabelNamespace {
         return 'Light V0.1';
       case 'light-v0.2':
         return 'Light V0.2';
+      case 'klaster':
+        return 'Klaster';
       case 'nani':
         return 'Nani';
       case 'openfort':
@@ -245,6 +247,8 @@ function getNamespaceIcon(namespaceId: LabelNamespaceId): string | undefined {
         return undefined;
       case 'fun':
         return 'fun';
+      case 'klaster':
+        return 'klaster';
       case 'light-v0.1':
       case 'light-v0.2':
         return 'light';
