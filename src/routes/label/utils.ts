@@ -131,10 +131,8 @@ function getNamespaceById(id: LabelNamespaceId): LabelNamespace {
         return 'Farcaster';
       case 'fun':
         return 'Fun';
-      case 'light-v0.1':
-        return 'Light V0.1';
-      case 'light-v0.2':
-        return 'Light V0.2';
+      case 'light':
+        return 'Light';
       case 'klaster':
         return 'Klaster';
       case 'nani':
@@ -249,8 +247,7 @@ function getNamespaceIcon(namespaceId: LabelNamespaceId): string | undefined {
         return 'fun';
       case 'klaster':
         return 'klaster';
-      case 'light-v0.1':
-      case 'light-v0.2':
+      case 'light':
         return 'light';
       case 'nani':
         return undefined;
