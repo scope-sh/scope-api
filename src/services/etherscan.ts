@@ -16,6 +16,8 @@ import {
 } from '@/utils/chains';
 import { COMPILER, EVM, LANGUAGE, SourceCode } from '@/utils/sources';
 
+const etherscanApiKey = process.env.ETHERSCAN_API_KEY;
+
 interface SourceResponse {
   status: '0' | '1';
   message: string;
@@ -57,6 +59,9 @@ class Service {
     this.chain = chain;
     this.client = ky.create({
       prefixUrl: this.#getEndpointUrl(chain),
+      searchParams: {
+        apikey: getApiKey(chain) as string,
+      },
     });
   }
 
@@ -212,6 +217,15 @@ function parseSource(source: string): SourceCodeResponse | null {
       },
     },
   };
+}
+
+function getApiKey(chain: ChainId): string | undefined {
+  switch (chain) {
+    case ETHEREUM:
+      return etherscanApiKey;
+    default:
+      return undefined;
+  }
 }
 
 function getEntry(
