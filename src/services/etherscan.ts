@@ -116,7 +116,9 @@ class Service {
     if (data.status !== '1') {
       const error =
         typeof data.result === 'string' ? data.result : 'Unknown error';
-      console.error(`Error fetching sources for ${address}: ${error}`);
+      console.error(
+        `Error fetching sources for ${address} on chain ${this.chain}: ${error}`,
+      );
       return undefined;
     }
     if (typeof data.result === 'string') {
