@@ -13,7 +13,7 @@ import {
 } from 'viem';
 
 import EtherscanService from '@/services/etherscan';
-import MinioService, { Contract, ContractCache } from '@/services/minio';
+import MinioService, { Contract } from '@/services/minio';
 import { ChainId, getChainData } from '@/utils/chains';
 import { getImplementation } from '@/utils/proxy';
 import { SourceCode } from '@/utils/sources';
@@ -39,11 +39,10 @@ interface ContractResponse {
   } | null;
 }
 
-type OptionalContractCache = {
-  [K in keyof ContractCache]: K extends 'timestamp'
-    ? ContractCache[K] | null
-    : ContractCache[K];
-};
+interface OptionalContractCache {
+  value: Contract | null;
+  timestamp: number | null;
+}
 
 type Abis = Record<
   Address,
@@ -73,6 +72,9 @@ async function getSource(
     minioBucket,
   );
   const contract = await fetchContract(minioService, chain, address);
+  if (!contract.value) {
+    return null;
+  }
   // Fetch impl address if there's no contract or if there is a contract but there is no implementation cached (unless we did that already recently)
   const useCachedImplementation =
     contract.timestamp === null
@@ -93,14 +95,22 @@ async function getSource(
   const implementationContract = implementation
     ? await fetchContract(minioService, chain, implementation)
     : null;
+  const implementationAbi =
+    implementationContract && implementationContract.value
+      ? implementationContract.value.abi
+      : null;
+  const implementationSource =
+    implementationContract && implementationContract.value
+      ? implementationContract.value.source
+      : null;
   return {
     abi: contract.value.abi,
     source: contract.value.source,
     implementation: implementation
       ? {
           address: implementation,
-          abi: implementationContract?.value.abi || null,
-          source: implementationContract?.value.source || null,
+          abi: implementationAbi,
+          source: implementationSource,
         }
       : null,
   };
@@ -167,6 +177,9 @@ async function fetchContractAbi(
   if (!contract) {
     return null;
   }
+  if (!contract.value) {
+    return null;
+  }
   const implementation = contract.value.implementation;
   if (!implementation) {
     return contract.value.abi;
@@ -176,6 +189,9 @@ async function fetchContractAbi(
     chain,
     implementation,
   );
+  if (!implementationContract.value) {
+    return null;
+  }
   return implementationContract.value.abi;
 }
 
@@ -201,11 +217,7 @@ async function fetchContract(
   const contract = await etherscanService.getSourceCode(address);
   if (contract === undefined) {
     return {
-      value: {
-        abi: null,
-        source: null,
-        implementation: null,
-      },
+      value: null,
       timestamp: null,
     };
   }
