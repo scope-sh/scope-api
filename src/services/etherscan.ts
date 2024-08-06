@@ -40,14 +40,18 @@ interface SourceResponse {
     | string;
 }
 
-interface SourceCodeResponse {
-  sources: Record<
-    string,
-    {
-      content: string;
-    }
-  >;
+type Sources = Record<
+  string,
+  {
+    content: string;
+  }
+>;
+
+interface FormattedSourceCode {
+  sources: Sources;
 }
+
+type SourceCodeResponse = FormattedSourceCode | Sources;
 
 const DEFAULT_PATH = '';
 
@@ -192,16 +196,20 @@ function parseCompiler(compilerString: string): {
   };
 }
 
-function parseSource(source: string): SourceCodeResponse | null {
+function parseSource(source: string): FormattedSourceCode | null {
   if (source.length === 0) {
     return null;
   }
   if (source[0] === '{' && source.at(-1) === '}') {
+    const hasMetadata = source[1] === '{' && source.at(-2) === '}';
+    const sourceString = hasMetadata
+      ? source.substring(1, source.length - 1)
+      : source;
     try {
-      const sourceCode = JSON.parse(
-        source.substring(1, source.length - 1),
-      ) as SourceCodeResponse;
-      return sourceCode;
+      const sourceCode = JSON.parse(sourceString) as SourceCodeResponse;
+      return 'sources' in sourceCode
+        ? (sourceCode as FormattedSourceCode)
+        : { sources: sourceCode };
     } catch {
       return {
         sources: {
@@ -254,3 +262,4 @@ function getEntry(
 }
 
 export default Service;
+export { parseSource };
