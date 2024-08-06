@@ -174,9 +174,6 @@ async function fetchContractAbi(
     minioBucket,
   );
   const contract = await fetchContract(minioService, chain, address);
-  if (!contract) {
-    return null;
-  }
   if (!contract.value) {
     return null;
   }
