@@ -136,6 +136,7 @@ class Service {
     if (!sourceCode) {
       return null;
     }
+    const name = result.ContractName;
     const entry = getEntry(sourceCode.sources, result.ContractName);
     const files = Object.fromEntries(
       Object.entries(sourceCode.sources).map(([name, { content }]) => [
@@ -143,9 +144,25 @@ class Service {
         content,
       ]),
     );
+    const constructorArguments = `0x${result.ConstructorArguments}`;
+    const evm = result.EVMVersion.toLowerCase() as EVM;
     const { language, compiler, compilerVersion } = parseCompiler(
       result.CompilerVersion,
     );
+    if (
+      isFaultySource(
+        this.chain,
+        name,
+        entry,
+        constructorArguments,
+        evm,
+        language,
+        compiler,
+        compilerVersion,
+      )
+    ) {
+      return null;
+    }
     // Ignore the implementation if it's the same as the address
     const implementation =
       result.Implementation === address
@@ -153,11 +170,11 @@ class Service {
         : (result.Implementation as Address);
     return {
       source: {
-        name: result.ContractName,
+        name,
         entry,
         files,
-        constructorArguments: `0x${result.ConstructorArguments}`,
-        evm: result.EVMVersion.toLowerCase() as EVM,
+        constructorArguments,
+        evm,
         language,
         compiler: {
           type: compiler,
@@ -174,6 +191,49 @@ class Service {
       implementation,
     };
   }
+}
+
+// Etherscan instance on Sepolia testnet returns a faulty source code
+// The source code belongs to the MetaMultiSigWallet contract, which the actual source code is different
+// This allegedly happens in case Etherscan doesn't have the source code for the contract
+function isFaultySource(
+  chain: ChainId,
+  name: string,
+  entry: string,
+  constructorArguments: string,
+  evm: EVM,
+  language: LANGUAGE,
+  compiler: COMPILER,
+  compilerVersion: string,
+): boolean {
+  if (chain !== SEPOLIA) {
+    return false;
+  }
+  if (name !== 'MetaMultiSigWallet') {
+    return false;
+  }
+  if (entry !== 'contracts/MetaMultiSigWallet.sol') {
+    return false;
+  }
+  if (
+    constructorArguments !==
+    '0x0000000000000000000000000000000000000000000000000000000000aa36a700000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000100000000000000000000000055b9cb0bcf56057010b9c471e7d42d60e1111eea'
+  ) {
+    return false;
+  }
+  if (evm !== 'london') {
+    return false;
+  }
+  if (language !== 'Solidity') {
+    return false;
+  }
+  if (compiler !== 'solc') {
+    return false;
+  }
+  if (compilerVersion !== 'v0.8.17+commit.8df45f5f') {
+    return false;
+  }
+  return true;
 }
 
 function parseCompiler(compilerString: string): {
