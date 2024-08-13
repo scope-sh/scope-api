@@ -137,6 +137,14 @@ function isKnownNonProxy(chain: Chain | undefined, address: Address): boolean {
   if (address === '0x0000000000008dd2574908774527fd6da397d75b') {
     return true;
   }
+  // Aerodrome Factory
+  if (address === '0x420dd381b31aef6683db6b902084cb0ffece40da') {
+    return true;
+  }
+  // Velodrome Factory V2
+  if (address === '0xf1046053aa5682b4f9a81b5481394da16be5ff5a') {
+    return true;
+  }
   return false;
 }
 
