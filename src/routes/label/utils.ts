@@ -41,6 +41,8 @@ function getLabelTypeById(value: LabelTypeId): LabelType {
         return 'Aave V3 vToken';
       case 'aave-v3-stoken':
         return 'Aave V3 sToken';
+      case 'aerodrome-v1-pool':
+        return 'Aerodrome V1 Pool';
       case 'alchemy-v1-multi-owner-modular-account':
         return 'Alchemy V1 Multi Owner Modular Account';
       case 'alchemy-v1.0-light-account':
@@ -71,10 +73,14 @@ function getLabelTypeById(value: LabelTypeId): LabelType {
         return 'ERC7579 Module';
       case 'fun-v1-account':
         return 'Fun Account';
-      case 'light-v0.1-account':
-        return 'Light V0.1 Account';
-      case 'light-v0.2-account':
-        return 'Light V0.2 Account';
+      case 'light-account':
+        return 'Light Account';
+      case 'morpho-vault':
+        return 'Morpho Vault';
+      case 'nani-v0-account':
+        return 'Nani V0 Account';
+      case 'nani-v1-account':
+        return 'Nani V1 Account';
       case 'patch-wallet-v1-account':
         return 'Patch Wallet Account';
       case 'rhinestone-v1-module':
@@ -105,6 +111,8 @@ function getNamespaceById(id: LabelNamespaceId): LabelNamespace {
         return 'Aave V2';
       case 'aave-v3':
         return 'Aave V3';
+      case 'aerodrome-v1':
+        return 'Aerodrome V1';
       case 'alchemy':
         return 'Alchemy';
       case 'biconomy':
@@ -131,10 +139,14 @@ function getNamespaceById(id: LabelNamespaceId): LabelNamespace {
         return 'Farcaster';
       case 'fun':
         return 'Fun';
-      case 'light':
-        return 'Light';
       case 'klaster':
         return 'Klaster';
+      case 'light':
+        return 'Light';
+      case 'lido':
+        return 'Lido';
+      case 'morpho':
+        return 'Morpho';
       case 'nani':
         return 'Nani';
       case 'openfort':
@@ -220,6 +232,8 @@ function getNamespaceIcon(namespaceId: LabelNamespaceId): string | undefined {
       case 'aave-v2':
       case 'aave-v3':
         return 'aave';
+      case 'aerodrome-v1':
+        return 'aerodrome';
       case 'alchemy':
         return 'alchemy';
       case 'biconomy':
@@ -247,8 +261,12 @@ function getNamespaceIcon(namespaceId: LabelNamespaceId): string | undefined {
         return 'fun';
       case 'klaster':
         return 'klaster';
+      case 'lido':
+        return 'lido';
       case 'light':
         return 'light';
+      case 'morpho':
+        return 'morpho';
       case 'nani':
         return undefined;
       case 'openfort':
