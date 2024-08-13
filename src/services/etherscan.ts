@@ -14,6 +14,7 @@ import {
   ARBITRUM_SEPOLIA,
   ChainId,
 } from '@/utils/chains';
+import { isKnownNonProxy } from '@/utils/proxy';
 import { COMPILER, EVM, LANGUAGE, SourceCode } from '@/utils/sources';
 
 const etherscanApiKey = process.env.ETHERSCAN_API_KEY;
@@ -99,7 +100,7 @@ class Service {
    * @param address The address of the contract
    * @returns The source code for the contract, or null if the contract is not verified, or undefined if an error occurred
    */
-  async getSourceCode(address: string): Promise<
+  async getSourceCode(address: Address): Promise<
     | {
         source: SourceCode;
         abi: Abi;
@@ -165,7 +166,7 @@ class Service {
     }
     // Ignore the implementation if it's the same as the address
     const implementation =
-      result.Implementation === address
+      result.Implementation === address && !isKnownNonProxy(this.chain, address)
         ? null
         : (result.Implementation as Address);
     return {

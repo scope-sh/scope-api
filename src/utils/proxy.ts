@@ -1,5 +1,5 @@
 import { padHex, zeroAddress, zeroHash } from 'viem';
-import type { Address, Chain, Hex, PublicClient } from 'viem';
+import type { Address, Hex, PublicClient } from 'viem';
 
 import eip897ProxyAbi from '@/abi/eip897Proxy.js';
 import safeProxyAbi from '@/abi/safeProxy.js';
@@ -73,7 +73,7 @@ async function getImplementation(
   client: PublicClient,
   address: Address,
 ): Promise<Address | null> {
-  if (isKnownNonProxy(client.chain, address)) {
+  if (isKnownNonProxy(client.chain?.id, address)) {
     return null;
   }
   // EIP897: `implementation` method
@@ -120,7 +120,7 @@ async function getImplementation(
   return null;
 }
 
-function isKnownNonProxy(chain: Chain | undefined, address: Address): boolean {
+function isKnownNonProxy(chain: number | undefined, address: Address): boolean {
   // ZeroDev Kernel Factory V3.0
   if (address === '0x6723b44abeec4e71ebe3232bd5b455805badd22f') {
     return true;
@@ -148,5 +148,4 @@ function isKnownNonProxy(chain: Chain | undefined, address: Address): boolean {
   return false;
 }
 
-// eslint-disable-next-line import/prefer-default-export
-export { getImplementation };
+export { getImplementation, isKnownNonProxy };
