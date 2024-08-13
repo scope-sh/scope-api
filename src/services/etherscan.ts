@@ -164,9 +164,9 @@ class Service {
     ) {
       return null;
     }
-    // Ignore the implementation if it's the same as the address
+    // Ignore the implementation if it's the same as the address or a known proxy
     const implementation =
-      result.Implementation === address && !isKnownNonProxy(this.chain, address)
+      result.Implementation === address || isKnownNonProxy(this.chain, address)
         ? null
         : (result.Implementation as Address);
     return {
