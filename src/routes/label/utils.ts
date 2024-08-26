@@ -171,6 +171,8 @@ function getNamespaceById(id: LabelNamespaceId): LabelNamespace {
         return 'Stackup';
       case 'thirdweb':
         return 'Thirdweb';
+      case 'union':
+        return 'Union';
       case 'unipass':
         return 'UniPass';
       case 'uniswap-v2':
@@ -290,6 +292,8 @@ function getNamespaceIcon(namespaceId: LabelNamespaceId): string | undefined {
         return 'stackup';
       case 'thirdweb':
         return undefined;
+      case 'union':
+        return 'union';
       case 'unipass':
         return undefined;
       case 'uniswap-v2':

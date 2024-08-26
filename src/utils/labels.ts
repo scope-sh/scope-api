@@ -74,6 +74,7 @@ type LabelNamespaceId =
   | 'safe'
   | 'stackup'
   | 'thirdweb'
+  | 'union'
   | 'unipass'
   | 'uniswap-v2'
   | 'uniswap-v3'
