@@ -1,5 +1,5 @@
 import ky, { KyInstance } from 'ky';
-import { Abi, Address } from 'viem';
+import { Abi, Address, Hex } from 'viem';
 
 import {
   ETHEREUM,
@@ -14,8 +14,8 @@ import {
   ARBITRUM_SEPOLIA,
   ChainId,
 } from '@/utils/chains';
+import { COMPILER, EVM, LANGUAGE, SourceCode } from '@/utils/contracts';
 import { isKnownNonProxy } from '@/utils/proxy';
-import { COMPILER, EVM, LANGUAGE, SourceCode } from '@/utils/sources';
 
 const etherscanApiKey = process.env.ETHERSCAN_API_KEY;
 
@@ -37,6 +37,17 @@ interface SourceResponse {
         Proxy: '0' | '1';
         Implementation: string;
         SwarmSource: string;
+      }[]
+    | string;
+}
+
+interface ContractCreationResponse {
+  status: '0' | '1';
+  message: string;
+  result:
+    | {
+        contractCreator: Address;
+        txHash: Hex;
       }[]
     | string;
 }
@@ -190,6 +201,43 @@ class Service {
       abi: JSON.parse(result.ABI) as Abi,
       isProxy: result.Proxy === '1',
       implementation,
+    };
+  }
+
+  async getContractCreation(address: Address): Promise<
+    | {
+        contractCreator: Address;
+        txHash: Hex;
+      }
+    | null
+    | undefined
+  > {
+    const response = await this.client.get('', {
+      searchParams: {
+        module: 'contract',
+        action: 'getcontractcreation',
+        contractaddresses: address,
+      },
+    });
+    const data = await response.json<ContractCreationResponse>();
+    if (data.status !== '1') {
+      const error =
+        typeof data.result === 'string' ? data.result : 'Unknown error';
+      console.error(
+        `Error fetching contract creation for ${address} on chain ${this.chain}: ${error}`,
+      );
+      return undefined;
+    }
+    if (typeof data.result === 'string') {
+      return undefined;
+    }
+    const result = data.result[0];
+    if (!result) {
+      return undefined;
+    }
+    return {
+      contractCreator: result.contractCreator,
+      txHash: result.txHash,
     };
   }
 }
