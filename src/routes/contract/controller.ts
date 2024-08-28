@@ -15,8 +15,8 @@ import {
 import EtherscanService from '@/services/etherscan';
 import MinioService, { Contract } from '@/services/minio';
 import { ChainId, getChainData } from '@/utils/chains';
+import { SourceCode } from '@/utils/contracts';
 import { getImplementation } from '@/utils/proxy';
-import { SourceCode } from '@/utils/sources';
 
 const alchemyKey = process.env.ALCHEMY_KEY as string;
 const minioPublicEndpoint = process.env.MINIO_PUBLIC_ENDPOINT as string;
@@ -29,7 +29,7 @@ const NO_SOURCE_CACHE_DURATION = 7 * DAY;
 const IMPLEMENTATION_CACHE_DURATION = DAY;
 const NO_IMPLEMENTATION_CACHE_DURATION = 30 * DAY;
 
-interface ContractResponse {
+interface SourceCodeResponse {
   abi: Abi | null;
   source: SourceCode | null;
   implementation: {
@@ -37,6 +37,11 @@ interface ContractResponse {
     abi: Abi | null;
     source: SourceCode | null;
   } | null;
+}
+
+interface DeploymentResponse {
+  deployer: Address | null;
+  transactionHash: Hex | null;
 }
 
 interface OptionalContractCache {
@@ -63,7 +68,7 @@ function getClient(chain: ChainId, alchemyKey: string): PublicClient {
 async function getSource(
   chain: ChainId,
   address: Address,
-): Promise<ContractResponse | null> {
+): Promise<SourceCodeResponse | null> {
   const client = getClient(chain, alchemyKey);
   const minioService = new MinioService(
     minioPublicEndpoint,
@@ -163,6 +168,26 @@ async function getAbi(
   return abi;
 }
 
+async function getDeployment(
+  chain: ChainId,
+  address: Address,
+): Promise<DeploymentResponse | null> {
+  const minioService = new MinioService(
+    minioPublicEndpoint,
+    minioAccessKey,
+    minioSecretKey,
+    minioBucket,
+  );
+  const contract = await fetchDeployment(minioService, chain, address);
+  if (!contract.value) {
+    return null;
+  }
+  return {
+    deployer: contract.value.deployment?.deployer ?? null,
+    transactionHash: contract.value.deployment?.transactionHash ?? null,
+  };
+}
+
 async function fetchContractAbi(
   chain: ChainId,
   address: Address,
@@ -211,23 +236,62 @@ async function fetchContract(
     }
   }
   // No cache or stale cache
-  const contract = await etherscanService.getSourceCode(address);
-  if (contract === undefined) {
+  const code = await etherscanService.getSourceCode(address);
+  if (code === undefined) {
     return {
       value: null,
       timestamp: null,
     };
   }
-  const code: Contract = {
-    abi: contract?.abi || null,
-    source: contract?.source || null,
-    implementation: contract?.implementation || null,
+  const contract: Contract = {
+    deployment: cachedCode?.value.deployment ?? null,
+    abi: code?.abi ?? null,
+    source: code?.source ?? null,
+    implementation: code?.implementation ?? null,
   };
-  await minioService.setContract(chain, address, code);
+  await minioService.setContract(chain, address, contract);
   return {
-    value: code,
+    value: contract,
     timestamp: null,
   };
 }
 
-export { getSource, getAbi };
+async function fetchDeployment(
+  minioService: MinioService,
+  chain: ChainId,
+  address: Address,
+): Promise<OptionalContractCache> {
+  const etherscanService = new EtherscanService(chain);
+  const cachedContract = await minioService.getContract(chain, address);
+  if (cachedContract && cachedContract.value.deployment) {
+    return {
+      value: cachedContract.value,
+      timestamp: cachedContract.timestamp,
+    };
+  }
+  const creation = await etherscanService.getContractCreation(address);
+  if (creation === undefined) {
+    return {
+      value: null,
+      timestamp: null,
+    };
+  }
+  const contract: Contract = {
+    deployment: creation
+      ? {
+          deployer: creation.contractCreator,
+          transactionHash: creation.txHash,
+        }
+      : null,
+    abi: cachedContract?.value.abi ?? null,
+    source: cachedContract?.value.source ?? null,
+    implementation: cachedContract?.value.implementation ?? null,
+  };
+  await minioService.setContract(chain, address, contract);
+  return {
+    value: contract,
+    timestamp: null,
+  };
+}
+
+export { getSource, getAbi, getDeployment };

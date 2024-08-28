@@ -4,9 +4,10 @@ import * as Minio from 'minio';
 import { Abi, Address } from 'viem';
 
 import { ChainId } from '@/utils/chains';
-import { SourceCode } from '@/utils/sources';
+import { SourceCode, Deployment } from '@/utils/contracts';
 
 interface Contract {
+  deployment: Deployment | null;
   source: SourceCode | null;
   abi: Abi | null;
   implementation: Address | null;
