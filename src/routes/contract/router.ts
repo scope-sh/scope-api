@@ -5,7 +5,7 @@ import { z } from 'zod';
 
 import { chainSchema, parseChainId } from '@/utils/chains';
 
-import { getAbi, getSource } from './controller';
+import { getAbi, getSource, getDeployment } from './controller';
 
 const router = new Hono()
   .get(
@@ -50,6 +50,25 @@ const router = new Hono()
       const chainId = parseChainId(chain);
       const abi = await getAbi(chainId, contracts);
       return c.json(abi);
+    },
+  )
+  .get(
+    '/deployment',
+    zValidator(
+      'query',
+      z.object({
+        address: z.string(),
+        chain: chainSchema,
+      }),
+    ),
+    async (c) => {
+      const { address, chain } = c.req.valid('query');
+      const chainId = parseChainId(chain);
+      const deployment = await getDeployment(
+        chainId,
+        address.toLowerCase() as Address,
+      );
+      return c.json(deployment);
     },
   );
 
