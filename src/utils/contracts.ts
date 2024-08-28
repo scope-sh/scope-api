@@ -1,3 +1,5 @@
+import { Hex } from 'viem';
+
 type LANGUAGE = 'Solidity' | 'Vyper';
 type COMPILER = 'solc' | 'vyper';
 type EVM =
@@ -29,4 +31,9 @@ interface SourceCode {
   };
 }
 
-export type { EVM, LANGUAGE, COMPILER, SourceCode };
+interface Deployment {
+  deployer: Hex;
+  transactionHash: Hex;
+}
+
+export type { EVM, LANGUAGE, COMPILER, SourceCode, Deployment };
