@@ -40,8 +40,8 @@ interface SourceCodeResponse {
 }
 
 interface DeploymentResponse {
-  deployer: Address | null;
-  transactionHash: Hex | null;
+  deployer: Address;
+  transactionHash: Hex;
 }
 
 interface OptionalContractCache {
@@ -182,10 +182,7 @@ async function getDeployment(
   if (!contract.value) {
     return null;
   }
-  return {
-    deployer: contract.value.deployment?.deployer ?? null,
-    transactionHash: contract.value.deployment?.transactionHash ?? null,
-  };
+  return contract.value.deployment ?? null;
 }
 
 async function fetchContractAbi(
