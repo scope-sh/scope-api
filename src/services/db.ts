@@ -83,6 +83,7 @@ function rowToLabel(row: LabelRow): LabelWithAddress {
       (row.typeId as LabelTypeId) || null,
       (row.namespaceId as LabelNamespaceId) || null,
     ),
+    metadata: row.metadata || {},
   };
 }
 
