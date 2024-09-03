@@ -69,6 +69,8 @@ function getLabelTypeById(value: LabelTypeId): LabelType {
         return 'Entry Point V0.6.0 Account';
       case 'entry-point-v0.7.0-account':
         return 'Entry Point V0.7.0 Account';
+      case 'etherspot-modular-v1-account':
+        return 'Etherspot Modular V1 Account';
       case 'erc7579-module':
         return 'ERC7579 Module';
       case 'fun-v1-account':
@@ -85,6 +87,8 @@ function getLabelTypeById(value: LabelTypeId): LabelType {
         return 'Patch Wallet Account';
       case 'rhinestone-v1-module':
         return 'Rhinestone V1 Module';
+      case 'safe7579-v1.0.0-account':
+        return 'Safe7579 V1.0.0 Account';
       case 'safe-v1.3.0-account':
         return 'Safe V1.3.0 Account';
       case 'safe-v1.4.1-account':
@@ -125,6 +129,8 @@ function getNamespaceById(id: LabelNamespaceId): LabelNamespace {
         return 'Candide';
       case 'circle':
         return 'Circle';
+      case 'coinbase':
+        return 'Coinbase';
       case 'coinbase-smart-wallet':
         return 'Coinbase Smart Wallet';
       case 'daimo':
@@ -135,6 +141,8 @@ function getNamespaceById(id: LabelNamespaceId): LabelNamespace {
         return 'ENS';
       case 'etherspot':
         return 'Etherspot';
+      case 'etherspot-modular-v1':
+        return 'Etherspot Modular V1';
       case 'farcaster':
         return 'Farcaster';
       case 'fun':
@@ -245,6 +253,7 @@ function getNamespaceIcon(namespaceId: LabelNamespaceId): string | undefined {
         return undefined;
       case 'candide':
         return undefined;
+      case 'coinbase':
       case 'coinbase-smart-wallet':
         return 'coinbase';
       case 'circle':
@@ -256,6 +265,7 @@ function getNamespaceIcon(namespaceId: LabelNamespaceId): string | undefined {
       case 'ethereum-attestation-service':
         return undefined;
       case 'etherspot':
+      case 'etherspot-modular-v1':
         return 'etherspot';
       case 'farcaster':
         return undefined;
@@ -278,7 +288,7 @@ function getNamespaceIcon(namespaceId: LabelNamespaceId): string | undefined {
       case 'parifi-v1':
         return undefined;
       case 'particle':
-        return undefined;
+        return 'particle';
       case 'patch-wallet':
         return undefined;
       case 'pimlico':
