@@ -18,6 +18,7 @@ import { COMPILER, EVM, LANGUAGE, SourceCode } from '@/utils/contracts';
 import { isKnownNonProxy } from '@/utils/proxy';
 
 const etherscanApiKey = process.env.ETHERSCAN_API_KEY;
+const polygonscanApiKey = process.env.POLYGONSCAN_API_KEY;
 
 interface SourceResponse {
   status: '0' | '1';
@@ -342,6 +343,8 @@ function getApiKey(chain: ChainId): string | undefined {
   switch (chain) {
     case ETHEREUM:
       return etherscanApiKey;
+    case POLYGON:
+      return polygonscanApiKey;
     default:
       return undefined;
   }
