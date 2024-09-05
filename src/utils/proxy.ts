@@ -145,6 +145,10 @@ function isKnownNonProxy(chain: number | undefined, address: Address): boolean {
   if (address === '0xf1046053aa5682b4f9a81b5481394da16be5ff5a') {
     return true;
   }
+  // Coinbase Smart Wallet Factory
+  if (address === '0x0ba5ed0c6aa8c49038f819e587e2633c4a9f428a') {
+    return true;
+  }
   return false;
 }
 
