@@ -129,6 +129,7 @@ function isKnownNonProxy(address: Address): boolean {
     '0x420dd381b31aef6683db6b902084cb0ffece40da', // Aerodrome Factory
     '0xf1046053aa5682b4f9a81b5481394da16be5ff5a', // Velodrome Factory V2
     '0x0ba5ed0c6aa8c49038f819e587e2633c4a9f428a', // Coinbase Smart Wallet Factory
+    '0x202a5598bdba2ce62bffa13ecccb04969719fad9', // Etherspot Modular V1 Account Implementation
   ].includes(address);
 }
 
