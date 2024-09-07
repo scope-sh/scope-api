@@ -64,7 +64,7 @@ class Service {
       const file = await this.client.getObject(this.bucket, key);
       const fileString = await streamToString(file);
       return JSON.parse(fileString);
-    } catch (e) {
+    } catch {
       return null;
     }
   }
