@@ -8,7 +8,7 @@ const app = new Hono();
 
 app.use(cors());
 
-const routes = app
+app
   .get('/', (c) => {
     return c.text('OK');
   })
@@ -17,4 +17,3 @@ const routes = app
   .route('/contract', contract);
 
 export default app;
-export type AppType = typeof routes;
