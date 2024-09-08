@@ -19,6 +19,7 @@ import { isKnownNonProxy } from '@/utils/proxy';
 
 const etherscanApiKey = process.env.ETHERSCAN_API_KEY;
 const polygonscanApiKey = process.env.POLYGONSCAN_API_KEY;
+const basescanApiKey = process.env.BASESCAN_API_KEY;
 
 interface SourceResponse {
   status: '0' | '1';
@@ -347,6 +348,8 @@ function getApiKey(chain: ChainId): string | undefined {
       return etherscanApiKey;
     case POLYGON:
       return polygonscanApiKey;
+    case BASE:
+      return basescanApiKey;
     default:
       return undefined;
   }
