@@ -65,6 +65,71 @@ function getClient(chain: ChainId, alchemyKey: string): PublicClient {
   });
 }
 
+async function getAll(
+  chain: ChainId,
+  address: Address,
+): Promise<{
+  source: SourceCodeResponse | null;
+  deployment: DeploymentResponse | null;
+} | null> {
+  const client = getClient(chain, alchemyKey);
+  const minioService = new MinioService(
+    minioPublicEndpoint,
+    minioAccessKey,
+    minioSecretKey,
+    minioBucket,
+  );
+  const contract = await fetchContract(minioService, chain, address);
+  if (!contract.value) {
+    return null;
+  }
+  // Fetch impl address if there's no contract or if there is a contract but there is no implementation cached (unless we did that already recently)
+  const useCachedImplementation =
+    contract.timestamp === null
+      ? contract.value.implementation !== null
+      : contract.value.implementation === null
+        ? contract.timestamp > Date.now() - NO_IMPLEMENTATION_CACHE_DURATION
+        : contract.timestamp > Date.now() - IMPLEMENTATION_CACHE_DURATION;
+  const implementation = useCachedImplementation
+    ? contract.value.implementation
+    : await getImplementation(client, address);
+  // Store the implementation in the cache
+  if (!useCachedImplementation) {
+    await minioService.setContract(chain, address, {
+      ...contract.value,
+      implementation,
+    });
+  }
+  const implementationContract = implementation
+    ? await fetchContract(minioService, chain, implementation)
+    : null;
+  const implementationAbi =
+    implementationContract && implementationContract.value
+      ? implementationContract.value.abi
+      : null;
+  const implementationSource =
+    implementationContract && implementationContract.value
+      ? implementationContract.value.source
+      : null;
+  const deployment = contract.value.deployment
+    ? await fetchDeployment(minioService, chain, address)
+    : null;
+  return {
+    deployment: deployment?.value?.deployment ?? null,
+    source: {
+      abi: contract.value.abi,
+      source: contract.value.source,
+      implementation: implementation
+        ? {
+            address: implementation,
+            abi: implementationAbi,
+            source: implementationSource,
+          }
+        : null,
+    },
+  };
+}
+
 async function getSource(
   chain: ChainId,
   address: Address,
@@ -291,4 +356,4 @@ async function fetchDeployment(
   };
 }
 
-export { getSource, getAbi, getDeployment };
+export { getAll, getSource, getAbi, getDeployment };
