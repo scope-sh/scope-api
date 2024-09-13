@@ -112,8 +112,8 @@ async function getAll(
       ? implementationContract.value.source
       : null;
   const deployment = contract.value.deployment
-    ? await fetchDeployment(minioService, chain, address)
-    : null;
+    ? contract
+    : await fetchDeployment(minioService, chain, address);
   return {
     deployment: deployment?.value?.deployment ?? null,
     source: {
