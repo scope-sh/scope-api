@@ -294,7 +294,7 @@ function getNamespaceIcon(namespaceId: LabelNamespaceId): string | undefined {
       case 'pimlico':
         return 'pimlico';
       case 'rhinestone-v1':
-        return undefined;
+        return 'rhinestone';
       case 'safe-core':
       case 'safe':
         return 'safe';
