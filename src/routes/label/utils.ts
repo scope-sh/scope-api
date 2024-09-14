@@ -301,7 +301,7 @@ function getNamespaceIcon(namespaceId: LabelNamespaceId): string | undefined {
       case 'stackup':
         return 'stackup';
       case 'thirdweb':
-        return undefined;
+        return 'thirdweb';
       case 'union':
         return 'union';
       case 'unipass':
