@@ -345,10 +345,13 @@ function parseSource(source: string): FormattedSourceCode | null {
 function getApiKey(chain: ChainId): string | undefined {
   switch (chain) {
     case ETHEREUM:
+    case SEPOLIA:
       return etherscanApiKey;
     case POLYGON:
+    case POLYGON_AMOY:
       return polygonscanApiKey;
     case BASE:
+    case BASE_SEPOLIA:
       return basescanApiKey;
     default:
       return undefined;
