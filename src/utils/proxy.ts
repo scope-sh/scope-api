@@ -1,4 +1,4 @@
-import { padHex, zeroAddress, zeroHash } from 'viem';
+import { padHex, size, zeroAddress, zeroHash } from 'viem';
 import type { Address, Hex, PublicClient } from 'viem';
 
 import eip897ProxyAbi from '@/abi/eip897Proxy.js';
@@ -76,7 +76,7 @@ async function getImplementation(
   if (isKnownNonProxy(address)) {
     return null;
   }
-  // EIP897: `implementation` method
+  // Call-based detection (ERC-897)
   const callResults = await client.multicall({
     contracts: [
       {
@@ -107,6 +107,7 @@ async function getImplementation(
       return address;
     }
   }
+  // Slot-based detection
   const slots = Object.values(slotMap);
   const addressSlot = padHex(address);
   slots.push(addressSlot);
@@ -115,6 +116,24 @@ async function getImplementation(
     const slotAddress = toAddress(slot);
     if (slotAddress) {
       return slotAddress;
+    }
+  }
+  // Bytecode-based detection (ERC-1167)
+  const code = await client.getCode({ address });
+  if (!code) {
+    return null;
+  }
+  const minimalProxyRegex =
+    /0x363d3d373d3d3d363d73([0-9a-f]{40})5af43d82803e903d91602b57fd5bf3/gm;
+  if (size(code) === 45) {
+    const match = minimalProxyRegex.exec(code);
+    if (match) {
+      const firstMatch = match[1];
+      if (!firstMatch) {
+        return null;
+      }
+      const address = `0x${firstMatch}` as Address;
+      return address;
     }
   }
   return null;
