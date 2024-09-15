@@ -99,6 +99,10 @@ function getLabelTypeById(value: LabelTypeId): LabelType {
         return 'Uniswap V2 Pool';
       case 'uniswap-v3-pool':
         return 'Uniswap V3 Pool';
+      case 'zora-721-token':
+        return 'Zora ERC-721 Drop';
+      case 'zora-1155-token':
+        return 'Zora ERC-1155 Drop';
     }
   }
 
@@ -195,6 +199,8 @@ function getNamespaceById(id: LabelNamespaceId): LabelNamespace {
         return 'ZeroDev Kernel V2';
       case 'zerodev-kernel-v3':
         return 'ZeroDev Kernel V3';
+      case 'zora':
+        return 'Zora';
     }
   }
 
@@ -314,6 +320,8 @@ function getNamespaceIcon(namespaceId: LabelNamespaceId): string | undefined {
       case 'zerodev-kernel-v2':
       case 'zerodev-kernel-v3':
         return 'zerodev';
+      case 'zora':
+        return 'zora';
     }
   }
 
