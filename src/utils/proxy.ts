@@ -1,4 +1,4 @@
-import { padHex, size, zeroAddress, zeroHash } from 'viem';
+import { padHex, zeroAddress, zeroHash } from 'viem';
 import type { Address, Hex, PublicClient } from 'viem';
 
 import eip897ProxyAbi from '@/abi/eip897Proxy.js';
@@ -118,19 +118,44 @@ async function getImplementation(
       return slotAddress;
     }
   }
-  // Bytecode-based detection (ERC-1167)
+  // Bytecode-based detection
+  // Credit to @banteg for the original list
+  // https://banteg.xyz/posts/minimal-proxies/
+  // https://github.com/banteg/ape/blob/7c82b33c7b523e73dd1543dd2e5fe3d43a9af3f3/src/ape_ethereum/ecosystem.py#L249-L261
   const code = await client.getCode({ address });
   if (!code) {
     return null;
   }
-  const minimalProxyRegex =
-    /0x363d3d373d3d3d363d73([0-9a-f]{40})5af43d82803e903d91602b57fd5bf3/gm;
-  if (size(code) === 45) {
-    const match = minimalProxyRegex.exec(code);
+  const patterns: RegExp[] = [
+    // 'Minimal (ERC-1167)'
+    /^0x363d3d373d3d3d363d73(.{40})5af43d82803e903d91602b57fd5bf3$/,
+    // '0age'
+    /^0x3d3d3d3d363d3d37363d73(.{40})5af43d3d93803e602a57fd5bf3$/,
+    // 'Clones'
+    /^0x36603057343d52307f830d2d700a97af574b186c80d40429385d24241565b08a7c559ba283a964d9b160203da23d3df35b3d3d3d3d363d3d37363d73(.{40})5af43d3d93803e605b57fd5bf3$/,
+    // 'Vyper'
+    /^0x366000600037611000600036600073(.{40})5af4602c57600080fd5b6110006000f3$/,
+    // 'VyperBeta'
+    /^0x366000600037611000600036600073(.{40})5af41558576110006000f3$/,
+    // 'CWIA'
+    /^0x3d3d3d3d363d3d3761.{4}603736393661.{4}013d73(.{40})5af43d3d93803e603557fd5bf3.*/,
+    // 'OldCWIA'
+    /^0x363d3d3761.{4}603836393d3d3d3661.{4}013d73(.{40})5af43d82803e903d91603657fd5bf3.*/,
+    // 'SudoswapCWIA'
+    /^0x3d3d3d3d363d3d37605160353639366051013d73(.{40})5af43d3d93803e603357fd5bf3.*/,
+    // 'SoladyCWIA'
+    /36602c57343d527f9e4ac34f21c619cefc926c8bd93b54bf5a39c7ab2127a895af1cc0691d7e3dff593da1005b363d3d373d3d3d3d61.{4}806062363936013d73(.{40})5af43d3d93803e606057fd5bf3.*/,
+    // 'SplitsCWIA'
+    /36602f57343d527f9e4ac34f21c619cefc926c8bd93b54bf5a39c7ab2127a895af1cc0691d7e3dff60203da13d3df35b3d3d3d3d363d3d3761.{4}606736393661.{4}013d73(.{40})5af43d3d93803e606557fd5bf3.*/,
+    // 'SoladyPush0'
+    /^0x5f5f365f5f37365f73(.{40})5af43d5f5f3e6029573d5ffd5b3d5ff3$/,
+  ];
+  for (const pattern of patterns) {
+    const match = pattern.exec(code);
     if (match) {
       const firstMatch = match[1];
       if (!firstMatch) {
-        return null;
+        continue;
       }
       const address = `0x${firstMatch}` as Address;
       return address;
