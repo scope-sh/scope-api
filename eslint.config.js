@@ -19,7 +19,6 @@ export default [
       sourceType: 'module',
     },
     rules: {
-      'no-unused-vars': 'off',
       'import-x/first': 'error',
       'import-x/exports-last': 'error',
       'import-x/newline-after-import': 'error',
