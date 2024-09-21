@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-unresolved
 import { describe, it, expect } from 'bun:test';
 
 import { parseSource } from './etherscan.js';
