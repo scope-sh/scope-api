@@ -1,16 +1,17 @@
+/* eslint-disable import-x/no-extraneous-dependencies */
 import js from '@eslint/js';
 import eslintPluginImportX from 'eslint-plugin-import-x';
-import tseslint from 'typescript-eslint';
 import globals from 'globals';
+import { configs as tsConfigs, parser as tsParser } from 'typescript-eslint';
 
 export default [
   js.configs.recommended,
   eslintPluginImportX.flatConfigs.recommended,
   eslintPluginImportX.flatConfigs.typescript,
-  ...tseslint.configs.recommended,
+  ...tsConfigs.recommended,
   {
     languageOptions: {
-      parser: tseslint.parser,
+      parser: tsParser,
       globals: {
         ...globals.node,
       },
