@@ -52,6 +52,7 @@ interface OptionalContractCache {
 type Abis = Record<
   Address,
   {
+    functionNames: Record<Hex, string>;
     functions: Record<Hex, AbiFunction>;
     events: Record<Hex, AbiEvent>;
   }
@@ -191,6 +192,7 @@ async function getAbi(
   contracts: Record<
     string,
     {
+      functionNames: string[];
       functions: string[];
       events: string[];
     }
@@ -215,6 +217,18 @@ async function getAbi(
         contractEventAbi[selector as Hex] = topicEventAbi as AbiEvent;
       }
     }
+    const contractFunctionNames: Record<Hex, string> = {};
+    for (const selector of contractSelectors.functionNames) {
+      const topicFunctionAbi = contractAbi.find(
+        (abi) =>
+          abi.type === 'function' && toFunctionSelector(abi) === selector,
+      );
+      if (topicFunctionAbi) {
+        contractFunctionNames[selector as Hex] = (
+          topicFunctionAbi as AbiFunction
+        ).name;
+      }
+    }
     const contractFunctionAbi: Record<Hex, AbiFunction> = {};
     for (const selector of contractSelectors.functions) {
       const topicFunctionAbi = contractAbi.find(
@@ -226,6 +240,7 @@ async function getAbi(
       }
     }
     abi[address as Address] = {
+      functionNames: contractFunctionNames,
       functions: contractFunctionAbi,
       events: contractEventAbi,
     };
