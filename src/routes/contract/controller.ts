@@ -198,15 +198,18 @@ async function getAbi(
     }
   >,
 ): Promise<Abis> {
-  const abi: Abis = {};
-  for (const address in contracts) {
-    const contractAbi = await fetchContractAbi(chain, address as Address, true);
+  async function getContractAbis(
+    chain: ChainId,
+    address: Address,
+    contractSelectors: {
+      functionNames: string[];
+      functions: string[];
+      events: string[];
+    },
+  ): Promise<Abis[Address] | null> {
+    const contractAbi = await fetchContractAbi(chain, address, true);
     if (!contractAbi) {
-      continue;
-    }
-    const contractSelectors = contracts[address];
-    if (!contractSelectors) {
-      continue;
+      return null;
     }
     const contractEventAbi: Record<Hex, AbiEvent> = {};
     for (const selector of contractSelectors.events) {
@@ -239,11 +242,24 @@ async function getAbi(
         contractFunctionAbi[selector as Hex] = topicFunctionAbi as AbiFunction;
       }
     }
-    abi[address as Address] = {
+    return {
       functionNames: contractFunctionNames,
       functions: contractFunctionAbi,
       events: contractEventAbi,
     };
+  }
+  const abi: Abis = {};
+  const abisEntries = await Promise.all(
+    Object.entries(contracts).map(async ([address, contract]) => {
+      const abi = await getContractAbis(chain, address as Address, contract);
+      return [address, abi] as const;
+    }),
+  );
+
+  for (const [address, abiEntry] of abisEntries) {
+    if (abiEntry) {
+      abi[address as Address] = abiEntry;
+    }
   }
   return abi;
 }
