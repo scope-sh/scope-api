@@ -80,7 +80,7 @@ async function getAll(
     minioSecretKey,
     minioBucket,
   );
-  const contract = await fetchContract(minioService, chain, address);
+  const contract = await fetchContract(minioService, chain, address, false);
   if (!contract.value) {
     return null;
   }
@@ -102,7 +102,7 @@ async function getAll(
     });
   }
   const implementationContract = implementation
-    ? await fetchContract(minioService, chain, implementation)
+    ? await fetchContract(minioService, chain, implementation, false)
     : null;
   const implementationAbi =
     implementationContract && implementationContract.value
@@ -142,7 +142,7 @@ async function getSource(
     minioSecretKey,
     minioBucket,
   );
-  const contract = await fetchContract(minioService, chain, address);
+  const contract = await fetchContract(minioService, chain, address, false);
   if (!contract.value) {
     return null;
   }
@@ -164,7 +164,7 @@ async function getSource(
     });
   }
   const implementationContract = implementation
-    ? await fetchContract(minioService, chain, implementation)
+    ? await fetchContract(minioService, chain, implementation, false)
     : null;
   const implementationAbi =
     implementationContract && implementationContract.value
@@ -200,7 +200,7 @@ async function getAbi(
 ): Promise<Abis> {
   const abi: Abis = {};
   for (const address in contracts) {
-    const contractAbi = await fetchContractAbi(chain, address as Address);
+    const contractAbi = await fetchContractAbi(chain, address as Address, true);
     if (!contractAbi) {
       continue;
     }
@@ -268,6 +268,7 @@ async function getDeployment(
 async function fetchContractAbi(
   chain: ChainId,
   address: Address,
+  skipExternal: boolean,
 ): Promise<Abi | null> {
   const minioService = new MinioService(
     minioPublicEndpoint,
@@ -275,7 +276,12 @@ async function fetchContractAbi(
     minioSecretKey,
     minioBucket,
   );
-  const contract = await fetchContract(minioService, chain, address);
+  const contract = await fetchContract(
+    minioService,
+    chain,
+    address,
+    skipExternal,
+  );
   if (!contract.value) {
     return null;
   }
@@ -287,6 +293,7 @@ async function fetchContractAbi(
     minioService,
     chain,
     implementation,
+    skipExternal,
   );
   if (!implementationContract.value) {
     return null;
@@ -298,6 +305,7 @@ async function fetchContract(
   minioService: MinioService,
   chain: ChainId,
   address: Address,
+  skipExternal: boolean,
 ): Promise<OptionalContractCache> {
   const etherscanService = new EtherscanService(chain);
   const cachedCode = await minioService.getContract(chain, address);
@@ -311,6 +319,12 @@ async function fetchContract(
         timestamp: cachedCode.timestamp,
       };
     }
+  }
+  if (skipExternal) {
+    return {
+      value: null,
+      timestamp: null,
+    };
   }
   // No cache or stale cache
   const code = await etherscanService.getSourceCode(address);
