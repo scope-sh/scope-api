@@ -1,3 +1,5 @@
+// eslint-disable-next-line import-x/no-extraneous-dependencies
+import { AbiConstructor } from 'abitype';
 import { alchemy } from 'evm-providers';
 import {
   Abi,
@@ -52,6 +54,7 @@ interface OptionalContractCache {
 type Abis = Record<
   Address,
   {
+    constructors: AbiConstructor[];
     functionNames: Record<Hex, string>;
     functions: Record<Hex, AbiFunction>;
     events: Record<Hex, AbiEvent>;
@@ -192,6 +195,7 @@ async function getAbi(
   contracts: Record<
     string,
     {
+      constructors: boolean;
       functionNames: string[];
       functions: string[];
       events: string[];
@@ -202,6 +206,7 @@ async function getAbi(
     chain: ChainId,
     address: Address,
     contractSelectors: {
+      constructors: boolean;
       functionNames: string[];
       functions: string[];
       events: string[];
@@ -210,6 +215,14 @@ async function getAbi(
     const contractAbi = await fetchContractAbi(chain, address, true);
     if (!contractAbi) {
       return null;
+    }
+    const contractConstructors: AbiConstructor[] = [];
+    if (contractSelectors.constructors) {
+      for (const abi of contractAbi) {
+        if (abi.type === 'constructor') {
+          contractConstructors.push(abi);
+        }
+      }
     }
     const contractEventAbi: Record<Hex, AbiEvent> = {};
     for (const selector of contractSelectors.events) {
@@ -243,6 +256,7 @@ async function getAbi(
       }
     }
     return {
+      constructors: contractConstructors,
       functionNames: contractFunctionNames,
       functions: contractFunctionAbi,
       events: contractEventAbi,
