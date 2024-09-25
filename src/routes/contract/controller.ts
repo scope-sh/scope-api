@@ -1,5 +1,5 @@
 // eslint-disable-next-line import-x/no-extraneous-dependencies
-import { AbiConstructor } from 'abitype';
+import { AbiConstructor, AbiError } from 'abitype';
 import { alchemy } from 'evm-providers';
 import {
   Abi,
@@ -58,6 +58,7 @@ type Abis = Record<
     functionNames: Record<Hex, string>;
     functions: Record<Hex, AbiFunction>;
     events: Record<Hex, AbiEvent>;
+    errors: Record<Hex, AbiError>;
   }
 >;
 
@@ -195,10 +196,11 @@ async function getAbi(
   contracts: Record<
     string,
     {
-      constructors: boolean;
-      functionNames: string[];
-      functions: string[];
-      events: string[];
+      constructors?: boolean;
+      functionNames?: string[];
+      functions?: string[];
+      events?: string[];
+      errors?: string[];
     }
   >,
 ): Promise<Abis> {
@@ -206,10 +208,11 @@ async function getAbi(
     chain: ChainId,
     address: Address,
     contractSelectors: {
-      constructors: boolean;
-      functionNames: string[];
-      functions: string[];
-      events: string[];
+      constructors?: boolean;
+      functionNames?: string[];
+      functions?: string[];
+      events?: string[];
+      errors?: string[];
     },
   ): Promise<Abis[Address] | null> {
     const contractAbi = await fetchContractAbi(chain, address, true);
@@ -225,7 +228,7 @@ async function getAbi(
       }
     }
     const contractEventAbi: Record<Hex, AbiEvent> = {};
-    for (const selector of contractSelectors.events) {
+    for (const selector of contractSelectors.events ?? []) {
       const topicEventAbi = contractAbi.find(
         (abi) => abi.type === 'event' && toEventSelector(abi) === selector,
       );
@@ -234,7 +237,7 @@ async function getAbi(
       }
     }
     const contractFunctionNames: Record<Hex, string> = {};
-    for (const selector of contractSelectors.functionNames) {
+    for (const selector of contractSelectors.functionNames ?? []) {
       const topicFunctionAbi = contractAbi.find(
         (abi) =>
           abi.type === 'function' && toFunctionSelector(abi) === selector,
@@ -246,7 +249,7 @@ async function getAbi(
       }
     }
     const contractFunctionAbi: Record<Hex, AbiFunction> = {};
-    for (const selector of contractSelectors.functions) {
+    for (const selector of contractSelectors.functions ?? []) {
       const topicFunctionAbi = contractAbi.find(
         (abi) =>
           abi.type === 'function' && toFunctionSelector(abi) === selector,
@@ -255,11 +258,23 @@ async function getAbi(
         contractFunctionAbi[selector as Hex] = topicFunctionAbi as AbiFunction;
       }
     }
+    const contractErrorAbi: Record<Hex, AbiError> = {};
+    for (const selector of contractSelectors.errors ?? []) {
+      const topicErrorAbi = contractAbi.find(
+        (abi) =>
+          abi.type === 'error' &&
+          toFunctionSelector(abi as unknown as AbiFunction) === selector,
+      );
+      if (topicErrorAbi) {
+        contractErrorAbi[selector as Hex] = topicErrorAbi as AbiError;
+      }
+    }
     return {
       constructors: contractConstructors,
       functionNames: contractFunctionNames,
       functions: contractFunctionAbi,
       events: contractEventAbi,
+      errors: contractErrorAbi,
     };
   }
   const abi: Abis = {};

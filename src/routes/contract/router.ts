@@ -54,10 +54,11 @@ const router = new Hono()
         contracts: z.record(
           z.string(),
           z.object({
-            constructors: z.boolean(),
-            functionNames: z.array(z.string()),
-            functions: z.array(z.string()),
-            events: z.array(z.string()),
+            constructors: z.boolean().optional(),
+            functionNames: z.array(z.string()).optional(),
+            functions: z.array(z.string()).optional(),
+            events: z.array(z.string()).optional(),
+            errors: z.array(z.string()).optional(),
           }),
         ),
       }),
