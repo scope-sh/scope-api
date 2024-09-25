@@ -10,9 +10,13 @@ import {
   PublicClient,
   createPublicClient,
   http,
+  keccak256,
+  slice,
   toEventSelector,
   toFunctionSelector,
+  toHex,
 } from 'viem';
+import { formatAbiItem } from 'viem/utils';
 
 import EtherscanService from '@/services/etherscan';
 import MinioService, { Contract } from '@/services/minio';
@@ -191,6 +195,10 @@ async function getSource(
   };
 }
 
+function toErrorSelector(abi: AbiError): Hex {
+  return slice(keccak256(toHex(formatAbiItem(abi))), 0, 4);
+}
+
 async function getAbi(
   chain: ChainId,
   contracts: Record<
@@ -261,9 +269,7 @@ async function getAbi(
     const contractErrorAbi: Record<Hex, AbiError> = {};
     for (const selector of contractSelectors.errors ?? []) {
       const topicErrorAbi = contractAbi.find(
-        (abi) =>
-          abi.type === 'error' &&
-          toFunctionSelector(abi as unknown as AbiFunction) === selector,
+        (abi) => abi.type === 'error' && toErrorSelector(abi) === selector,
       );
       if (topicErrorAbi) {
         contractErrorAbi[selector as Hex] = topicErrorAbi as AbiError;
