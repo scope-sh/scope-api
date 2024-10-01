@@ -317,7 +317,7 @@ async function getDeployment(
   return contract.value.deployment ?? null;
 }
 
-async function guessAbi(chain: ChainId, address: Address): Promise<Abi | null> {
+async function guessAbi(chain: ChainId, address: Address): Promise<Abi> {
   const client = getClient(chain, alchemyKey);
   const abiResult = await whatsabi.autoload(address, {
     provider: client,
