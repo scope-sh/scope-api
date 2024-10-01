@@ -1,3 +1,4 @@
+import { whatsabi } from '@shazow/whatsabi';
 // eslint-disable-next-line import-x/no-extraneous-dependencies
 import { AbiConstructor, AbiError } from 'abitype';
 import { alchemy } from 'evm-providers';
@@ -316,6 +317,23 @@ async function getDeployment(
   return contract.value.deployment ?? null;
 }
 
+async function guessAbi(chain: ChainId, address: Address): Promise<Abi | null> {
+  const client = getClient(chain, alchemyKey);
+  const abiResult = await whatsabi.autoload(address, {
+    provider: client,
+    abiLoader: false,
+  });
+  const functions = abiResult.abi.filter(
+    (abi) => abi.type === 'function',
+  ) as AbiFunction[];
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const events = abiResult.abi.filter(
+    (abi) => abi.type === 'event',
+  ) as AbiEvent[];
+  return [...functions, ...events] as Abi;
+}
+
 async function fetchContractAbi(
   chain: ChainId,
   address: Address,
@@ -332,7 +350,10 @@ async function fetchContractAbi(
   }
   const implementation = contract.value.implementation;
   if (!implementation) {
-    return contract.value.abi;
+    if (contract.value.abi !== null) {
+      return contract.value.abi;
+    }
+    return guessAbi(chain, address);
   }
   const implementationContract = await fetchContract(
     minioService,
@@ -342,7 +363,10 @@ async function fetchContractAbi(
   if (!implementationContract.value) {
     return null;
   }
-  return implementationContract.value.abi;
+  if (implementationContract.value.abi !== null) {
+    return implementationContract.value.abi;
+  }
+  return guessAbi(chain, implementation);
 }
 
 async function fetchContract(
