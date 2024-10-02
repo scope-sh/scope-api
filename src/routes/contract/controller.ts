@@ -322,6 +322,8 @@ async function guessAbi(chain: ChainId, address: Address): Promise<Abi> {
   const abiResult = await whatsabi.autoload(address, {
     provider: client,
     abiLoader: false,
+    followProxies: false,
+    enableExperimentalMetadata: true,
   });
   const functions = abiResult.abi
     .filter((abi) => abi.type === 'function' && abi.name && abi.inputs)
