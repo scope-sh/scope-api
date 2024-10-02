@@ -323,14 +323,25 @@ async function guessAbi(chain: ChainId, address: Address): Promise<Abi> {
     provider: client,
     abiLoader: false,
   });
-  const functions = abiResult.abi.filter(
-    (abi) => abi.type === 'function',
-  ) as AbiFunction[];
+  const functions = abiResult.abi
+    .filter((abi) => abi.type === 'function')
+    .map((abi) => ({
+      ...abi,
+      selector: undefined,
+      sig: undefined,
+      sigAlts: undefined,
+      outputs: [],
+    })) as AbiFunction[];
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  const events = abiResult.abi.filter(
-    (abi) => abi.type === 'event',
-  ) as AbiEvent[];
+  const events = abiResult.abi
+    .filter((abi) => abi.type === 'event')
+    .map((abi) => ({
+      ...abi,
+      hash: undefined,
+      sig: undefined,
+      sigAlts: undefined,
+    })) as AbiEvent[];
   return [...functions, ...events] as Abi;
 }
 
