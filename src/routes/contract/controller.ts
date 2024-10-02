@@ -324,7 +324,7 @@ async function guessAbi(chain: ChainId, address: Address): Promise<Abi> {
     abiLoader: false,
   });
   const functions = abiResult.abi
-    .filter((abi) => abi.type === 'function')
+    .filter((abi) => abi.type === 'function' && abi.name && abi.inputs)
     .map((abi) => ({
       ...abi,
       selector: undefined,
@@ -335,7 +335,7 @@ async function guessAbi(chain: ChainId, address: Address): Promise<Abi> {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   const events = abiResult.abi
-    .filter((abi) => abi.type === 'event')
+    .filter((abi) => abi.type === 'event' && abi.name)
     .map((abi) => ({
       ...abi,
       hash: undefined,
