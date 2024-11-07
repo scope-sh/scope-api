@@ -317,34 +317,38 @@ async function getDeployment(
   return contract.value.deployment ?? null;
 }
 
-async function guessAbi(chain: ChainId, address: Address): Promise<Abi> {
+async function guessAbi(chain: ChainId, address: Address): Promise<Abi | null> {
   const client = getClient(chain, alchemyKey);
-  const abiResult = await whatsabi.autoload(address, {
-    provider: client,
-    abiLoader: false,
-    followProxies: false,
-    enableExperimentalMetadata: true,
-  });
-  const functions = abiResult.abi
-    .filter((abi) => abi.type === 'function' && abi.name && abi.inputs)
-    .map((abi) => ({
-      ...abi,
-      selector: undefined,
-      sig: undefined,
-      sigAlts: undefined,
-      outputs: [],
-    })) as AbiFunction[];
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  const events = abiResult.abi
-    .filter((abi) => abi.type === 'event' && abi.name)
-    .map((abi) => ({
-      ...abi,
-      hash: undefined,
-      sig: undefined,
-      sigAlts: undefined,
-    })) as AbiEvent[];
-  return [...functions, ...events] as Abi;
+  try {
+    const abiResult = await whatsabi.autoload(address, {
+      provider: client,
+      abiLoader: false,
+      followProxies: false,
+      enableExperimentalMetadata: true,
+    });
+    const functions = abiResult.abi
+      .filter((abi) => abi.type === 'function' && abi.name && abi.inputs)
+      .map((abi) => ({
+        ...abi,
+        selector: undefined,
+        sig: undefined,
+        sigAlts: undefined,
+        outputs: [],
+      })) as AbiFunction[];
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    const events = abiResult.abi
+      .filter((abi) => abi.type === 'event' && abi.name)
+      .map((abi) => ({
+        ...abi,
+        hash: undefined,
+        sig: undefined,
+        sigAlts: undefined,
+      })) as AbiEvent[];
+    return [...functions, ...events] as Abi;
+  } catch {
+    return null;
+  }
 }
 
 async function fetchContractAbi(
