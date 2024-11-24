@@ -82,6 +82,7 @@ async function getAll(
   source: SourceCodeResponse | null;
   deployment: DeploymentResponse | null;
 } | null> {
+  console.log('getAll 1', chain, address);
   const client = getClient(chain, alchemyKey);
   const minioService = new MinioService(
     minioPublicEndpoint,
@@ -90,9 +91,11 @@ async function getAll(
     minioBucket,
   );
   const contract = await fetchContract(minioService, chain, address);
+  console.log('getAll 2', contract);
   if (!contract.value) {
     return null;
   }
+  console.log('getAll 2.1', contract.timestamp, contract.value.implementation);
   // Fetch impl address if there's no contract or if there is a contract but there is no implementation cached (unless we did that already recently)
   const useCachedImplementation =
     contract.timestamp === null
@@ -100,9 +103,11 @@ async function getAll(
       : contract.value.implementation === null
         ? contract.timestamp > Date.now() - NO_IMPLEMENTATION_CACHE_DURATION
         : contract.timestamp > Date.now() - IMPLEMENTATION_CACHE_DURATION;
+  console.log('getAll 3', useCachedImplementation);
   const implementation = useCachedImplementation
     ? contract.value.implementation
     : await getImplementation(client, address);
+  console.log('getAll 4', implementation);
   // Store the implementation in the cache
   if (!useCachedImplementation) {
     await minioService.setContract(chain, address, {
@@ -113,17 +118,21 @@ async function getAll(
   const implementationContract = implementation
     ? await fetchContract(minioService, chain, implementation)
     : null;
+  console.log('getAll 5', implementationContract);
   const implementationAbi =
     implementationContract && implementationContract.value
       ? implementationContract.value.abi
       : null;
+  console.log('getAll 6', implementationAbi);
   const implementationSource =
     implementationContract && implementationContract.value
       ? implementationContract.value.source
       : null;
+  console.log('getAll 7', implementationSource);
   const deployment = contract.value.deployment
     ? contract
     : await fetchDeployment(minioService, chain, address);
+  console.log('getAll 8', deployment);
   return {
     deployment: deployment?.value?.deployment ?? null,
     source: {
