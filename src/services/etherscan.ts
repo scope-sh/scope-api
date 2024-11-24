@@ -1,25 +1,11 @@
 import ky, { KyInstance } from 'ky';
 import { Abi, Address, Hex } from 'viem';
 
-import {
-  ETHEREUM,
-  SEPOLIA,
-  OPTIMISM,
-  OPTIMISM_SEPOLIA,
-  POLYGON,
-  POLYGON_AMOY,
-  BASE,
-  BASE_SEPOLIA,
-  ARBITRUM,
-  ARBITRUM_SEPOLIA,
-  ChainId,
-} from '@/utils/chains';
+import { SEPOLIA, ChainId } from '@/utils/chains';
 import { COMPILER, EVM, LANGUAGE, SourceCode } from '@/utils/contracts';
 import { isKnownNonProxy } from '@/utils/proxy';
 
 const etherscanApiKey = process.env.ETHERSCAN_API_KEY;
-const polygonscanApiKey = process.env.POLYGONSCAN_API_KEY;
-const basescanApiKey = process.env.BASESCAN_API_KEY;
 
 interface SourceResponse {
   status: '0' | '1';
@@ -74,38 +60,17 @@ class Service {
   client: KyInstance;
 
   constructor(chain: ChainId) {
+    if (!etherscanApiKey) {
+      throw new Error(`Etherscan API key not available`);
+    }
     this.chain = chain;
     this.client = ky.create({
-      prefixUrl: this.#getEndpointUrl(chain),
+      prefixUrl: 'https://api.etherscan.io/v2/api',
       searchParams: {
-        apikey: getApiKey(chain) as string,
+        apikey: etherscanApiKey,
+        chainid: chain,
       },
     });
-  }
-
-  #getEndpointUrl(chain: ChainId): string {
-    switch (chain) {
-      case ETHEREUM:
-        return 'https://api.etherscan.io/api';
-      case SEPOLIA:
-        return 'https://api-sepolia.etherscan.io/api';
-      case OPTIMISM:
-        return 'https://api-optimistic.etherscan.io/api';
-      case OPTIMISM_SEPOLIA:
-        return 'https://api-sepolia-optimistic.etherscan.io/api';
-      case POLYGON:
-        return 'https://api.polygonscan.com/api';
-      case POLYGON_AMOY:
-        return 'https://api-amoy.polygonscan.com/api';
-      case BASE:
-        return 'https://api.basescan.org/api';
-      case BASE_SEPOLIA:
-        return 'https://api-sepolia.basescan.org/api';
-      case ARBITRUM:
-        return 'https://api.arbiscan.io/api';
-      case ARBITRUM_SEPOLIA:
-        return 'https://api-sepolia.arbiscan.io/api';
-    }
   }
 
   /*
@@ -340,22 +305,6 @@ function parseSource(source: string): FormattedSourceCode | null {
       },
     },
   };
-}
-
-function getApiKey(chain: ChainId): string | undefined {
-  switch (chain) {
-    case ETHEREUM:
-    case SEPOLIA:
-      return etherscanApiKey;
-    case POLYGON:
-    case POLYGON_AMOY:
-      return polygonscanApiKey;
-    case BASE:
-    case BASE_SEPOLIA:
-      return basescanApiKey;
-    default:
-      return undefined;
-  }
 }
 
 function getEntry(
