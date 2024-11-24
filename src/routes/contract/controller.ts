@@ -407,8 +407,10 @@ async function fetchContract(
   chain: ChainId,
   address: Address,
 ): Promise<OptionalContractCache> {
+  console.log('fetchContract 1', chain, address);
   const etherscanService = new EtherscanService(chain);
   const cachedCode = await minioService.getContract(chain, address);
+  console.log('fetchContract 2', cachedCode);
   if (cachedCode) {
     if (
       !!cachedCode.value.source ||
