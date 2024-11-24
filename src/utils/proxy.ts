@@ -73,11 +73,9 @@ async function getImplementation(
   client: PublicClient,
   address: Address,
 ): Promise<Address | null> {
-  console.log('getImplementation 1', address);
   if (isKnownNonProxy(address)) {
     return null;
   }
-  console.log('getImplementation 2');
   // Call-based detection (ERC-897)
   const callResults = await client.multicall({
     contracts: [
@@ -97,18 +95,15 @@ async function getImplementation(
   });
   const implementationResult = callResults[0];
   const masterCopyResult = callResults[1];
-  console.log('getImplementation 3', implementationResult, masterCopyResult);
   if (implementationResult.status === 'success') {
     const address = implementationResult.result.toLowerCase() as Address;
     if (address !== zeroAddress) {
-      console.log('getImplementation 3.1', address);
       return address;
     }
   }
   if (masterCopyResult.status === 'success') {
     const address = masterCopyResult.result.toLowerCase() as Address;
     if (address !== zeroAddress) {
-      console.log('getImplementation 3.2', address);
       return address;
     }
   }
@@ -117,11 +112,9 @@ async function getImplementation(
   const addressSlot = padHex(address);
   slots.push(addressSlot);
   const slotValues = await getStorage(client, address, slots);
-  console.log('getImplementation 4', slotValues);
   for (const slot of slotValues) {
     const slotAddress = toAddress(slot);
     if (slotAddress) {
-      console.log('getImplementation 4.1', slotAddress);
       return slotAddress;
     }
   }
@@ -130,7 +123,6 @@ async function getImplementation(
   // https://banteg.xyz/posts/minimal-proxies/
   // https://github.com/banteg/ape/blob/7c82b33c7b523e73dd1543dd2e5fe3d43a9af3f3/src/ape_ethereum/ecosystem.py#L249-L261
   const code = await client.getCode({ address });
-  console.log('getImplementation 5', code);
   if (!code) {
     return null;
   }
@@ -166,11 +158,9 @@ async function getImplementation(
         continue;
       }
       const address = `0x${firstMatch}` as Address;
-      console.log('getImplementation 5.1', address, pattern);
       return address;
     }
   }
-  console.log('getImplementation 6');
   return null;
 }
 
