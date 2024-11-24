@@ -144,6 +144,7 @@ async function getSource(
   chain: ChainId,
   address: Address,
 ): Promise<SourceCodeResponse | null> {
+  console.log('getSource 1', chain, address);
   const client = getClient(chain, alchemyKey);
   const minioService = new MinioService(
     minioPublicEndpoint,
@@ -152,6 +153,7 @@ async function getSource(
     minioBucket,
   );
   const contract = await fetchContract(minioService, chain, address);
+  console.log('getSource 2', contract);
   if (!contract.value) {
     return null;
   }
@@ -162,9 +164,11 @@ async function getSource(
       : contract.value.implementation === null
         ? contract.timestamp > Date.now() - NO_IMPLEMENTATION_CACHE_DURATION
         : contract.timestamp > Date.now() - IMPLEMENTATION_CACHE_DURATION;
+  console.log('getSource 3', useCachedImplementation);
   const implementation = useCachedImplementation
     ? contract.value.implementation
     : await getImplementation(client, address);
+  console.log('getSource 4', implementation);
   // Store the implementation in the cache
   if (!useCachedImplementation) {
     await minioService.setContract(chain, address, {
@@ -175,14 +179,17 @@ async function getSource(
   const implementationContract = implementation
     ? await fetchContract(minioService, chain, implementation)
     : null;
+  console.log('getSource 5', implementationContract);
   const implementationAbi =
     implementationContract && implementationContract.value
       ? implementationContract.value.abi
       : null;
+  console.log('getSource 6', implementationAbi);
   const implementationSource =
     implementationContract && implementationContract.value
       ? implementationContract.value.source
       : null;
+  console.log('getSource 7', implementationSource);
   return {
     abi: contract.value.abi,
     source: contract.value.source,
