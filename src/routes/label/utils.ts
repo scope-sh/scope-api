@@ -29,80 +29,8 @@ function getLabelTypeById(value: LabelTypeId): LabelType {
         return 'ERC721';
       case 'erc1155':
         return 'ERC1155';
-      case 'aave-v2-atoken':
-        return 'Aave V2 aToken';
-      case 'aave-v2-variable-debt-token':
-        return 'Aave V2 Variable Debt Token';
-      case 'aave-v2-stable-debt-token':
-        return 'Aave V2 Stable Debt Token';
-      case 'aave-v3-atoken':
-        return 'Aave V3 aToken';
-      case 'aave-v3-vtoken':
-        return 'Aave V3 vToken';
-      case 'aave-v3-stoken':
-        return 'Aave V3 sToken';
-      case 'aerodrome-v1-pool':
-        return 'Aerodrome V1 Pool';
-      case 'alchemy-v1-multi-owner-modular-account':
-        return 'Alchemy V1 Multi Owner Modular Account';
-      case 'alchemy-v1.0-light-account':
-        return 'Alchemy V1.0 Light Account';
-      case 'alchemy-v1.1-light-account':
-        return 'Alchemy V1.1 Light Account';
-      case 'alchemy-v2-light-account':
-        return 'Alchemy V2 Light Account';
-      case 'alchemy-v2-multi-owner-light-account':
-        return 'Alchemy V2 Multi Owner Light Account';
-      case 'biconomy-v2-account':
-        return 'Biconomy V2 Account';
-      case 'coinbase-smart-wallet-v1-account':
-        return 'Coinbase Smart Wallet V1 Account';
-      case 'daimo-v1-account':
-        return 'Daimo V1 Account';
-      case 'kernel-v1-account':
-        return 'Kernel V1 Account';
-      case 'kernel-v2-account':
-        return 'Kernel V2 Account';
-      case 'kernel-v3-account':
-        return 'Kernel V3 Account';
-      case 'entry-point-v0.6.0-account':
-        return 'Entry Point V0.6.0 Account';
-      case 'entry-point-v0.7.0-account':
-        return 'Entry Point V0.7.0 Account';
-      case 'etherspot-modular-v1-account':
-        return 'Etherspot Modular V1 Account';
       case 'erc7579-module':
         return 'ERC7579 Module';
-      case 'fun-v1-account':
-        return 'Fun Account';
-      case 'light-account':
-        return 'Light Account';
-      case 'morpho-vault':
-        return 'Morpho Vault';
-      case 'nani-v0-account':
-        return 'Nani V0 Account';
-      case 'nani-v1-account':
-        return 'Nani V1 Account';
-      case 'patch-wallet-v1-account':
-        return 'Patch Wallet Account';
-      case 'rhinestone-v1-module':
-        return 'Rhinestone V1 Module';
-      case 'safe7579-v1.0.0-account':
-        return 'Safe7579 V1.0.0 Account';
-      case 'safe-v1.3.0-account':
-        return 'Safe V1.3.0 Account';
-      case 'safe-v1.4.1-account':
-        return 'Safe V1.4.1 Account';
-      case 'thirdweb-v1-managed-account':
-        return 'Thirdweb V1 Managed Account';
-      case 'uniswap-v2-pool':
-        return 'Uniswap V2 Pool';
-      case 'uniswap-v3-pool':
-        return 'Uniswap V3 Pool';
-      case 'zora-721-token':
-        return 'Zora ERC-721 Drop';
-      case 'zora-1155-token':
-        return 'Zora ERC-1155 Drop';
     }
   }
 
@@ -123,14 +51,20 @@ function getNamespaceById(id: LabelNamespaceId): LabelNamespace {
         return 'Aerodrome V1';
       case 'alchemy':
         return 'Alchemy';
+      case 'ambire':
+        return 'Ambire';
       case 'biconomy':
         return 'Biconomy';
       case 'biconomy-v2':
         return 'Biconomy V2';
+      case 'biconomy-nexus':
+        return 'Biconomy Nexus';
       case 'blocto':
         return 'Blocto';
       case 'candide':
         return 'Candide';
+      case 'cometh':
+        return 'Cometh';
       case 'circle':
         return 'Circle';
       case 'coinbase':
@@ -252,26 +186,31 @@ function getNamespaceIcon(namespaceId: LabelNamespaceId): string | undefined {
         return 'aerodrome';
       case 'alchemy':
         return 'alchemy';
-      case 'biconomy':
+      case 'ambire':
+        return 'ambire';
+      case 'biconomy-nexus':
       case 'biconomy-v2':
+      case 'biconomy':
         return 'biconomy';
       case 'blocto':
         return undefined;
       case 'candide':
         return undefined;
-      case 'coinbase':
-      case 'coinbase-smart-wallet':
-        return 'coinbase';
       case 'circle':
         return undefined;
+      case 'coinbase-smart-wallet':
+      case 'coinbase':
+        return 'coinbase';
+      case 'cometh':
+        return 'cometh';
       case 'daimo':
         return 'daimo';
       case 'ens':
         return 'ens';
       case 'ethereum-attestation-service':
         return undefined;
-      case 'etherspot':
       case 'etherspot-modular-v1':
+      case 'etherspot':
         return 'etherspot';
       case 'farcaster':
         return undefined;
