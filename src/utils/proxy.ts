@@ -1,7 +1,6 @@
 import { padHex, zeroAddress, zeroHash } from 'viem';
 import type { Address, Hex, PublicClient } from 'viem';
 
-import eip897ProxyAbi from '@/abi/eip897Proxy.js';
 import safeProxyAbi from '@/abi/safeProxy.js';
 
 // Storage slots for common proxy implementations
@@ -76,15 +75,9 @@ async function getImplementation(
   if (isKnownNonProxy(address)) {
     return null;
   }
-  // Call-based detection (ERC-897)
+  // Call-based detection (Safe-like proxies)
   const callResults = await client.multicall({
     contracts: [
-      {
-        abi: eip897ProxyAbi,
-        address: address,
-        functionName: 'implementation',
-        args: [],
-      },
       {
         abi: safeProxyAbi,
         address: address,
@@ -93,14 +86,7 @@ async function getImplementation(
       },
     ],
   });
-  const implementationResult = callResults[0];
-  const masterCopyResult = callResults[1];
-  if (implementationResult.status === 'success') {
-    const address = implementationResult.result.toLowerCase() as Address;
-    if (address !== zeroAddress) {
-      return address;
-    }
-  }
+  const masterCopyResult = callResults[0];
   if (masterCopyResult.status === 'success') {
     const address = masterCopyResult.result.toLowerCase() as Address;
     if (address !== zeroAddress) {
