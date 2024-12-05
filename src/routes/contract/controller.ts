@@ -11,18 +11,15 @@ import {
   PublicClient,
   createPublicClient,
   http,
-  keccak256,
-  slice,
   toEventSelector,
   toFunctionSelector,
-  toHex,
 } from 'viem';
-import { formatAbiItem } from 'viem/utils';
 
 import EtherscanService from '@/services/etherscan';
-import MinioService, { Contract } from '@/services/minio';
+import MinioService, { type ContractSource } from '@/services/minio';
 import { ChainId, getChainData } from '@/utils/chains';
-import { SourceCode } from '@/utils/contracts';
+import { Deployment, SourceCode } from '@/utils/contracts';
+import { toErrorSelector } from '@/utils/evm';
 import { getImplementation } from '@/utils/proxy';
 
 const alchemyKey = process.env.ALCHEMY_KEY as string;
@@ -51,8 +48,13 @@ interface DeploymentResponse {
   transactionHash: Hex;
 }
 
-interface OptionalContractCache {
-  value: Contract | null;
+interface OptionalContractSourceCache {
+  value: ContractSource | null;
+  timestamp: number | null;
+}
+
+interface OptionalContractDeploymentCache {
+  value: Deployment | null;
   timestamp: number | null;
 }
 
@@ -82,61 +84,14 @@ async function getAll(
   source: SourceCodeResponse | null;
   deployment: DeploymentResponse | null;
 } | null> {
-  const client = getClient(chain, alchemyKey);
-  const minioService = new MinioService(
-    minioPublicEndpoint,
-    minioAccessKey,
-    minioSecretKey,
-    minioBucket,
-  );
-  const contract = await fetchContract(minioService, chain, address);
-  if (!contract.value) {
+  const source = await getSource(chain, address);
+  if (!source) {
     return null;
   }
-  // Fetch impl address if there's no contract or if there is a contract but there is no implementation cached (unless we did that already recently)
-  const useCachedImplementation =
-    contract.timestamp === null
-      ? contract.value.implementation !== null
-      : contract.value.implementation === null
-        ? contract.timestamp > Date.now() - NO_IMPLEMENTATION_CACHE_DURATION
-        : contract.timestamp > Date.now() - IMPLEMENTATION_CACHE_DURATION;
-  const implementation = useCachedImplementation
-    ? contract.value.implementation
-    : await getImplementation(client, address);
-  // Store the implementation in the cache
-  if (!useCachedImplementation) {
-    await minioService.setContract(chain, address, {
-      ...contract.value,
-      implementation,
-    });
-  }
-  const implementationContract = implementation
-    ? await fetchContract(minioService, chain, implementation)
-    : null;
-  const implementationAbi =
-    implementationContract && implementationContract.value
-      ? implementationContract.value.abi
-      : null;
-  const implementationSource =
-    implementationContract && implementationContract.value
-      ? implementationContract.value.source
-      : null;
-  const deployment = contract.value.deployment
-    ? contract
-    : await fetchDeployment(minioService, chain, address);
+  const deployment = await getDeployment(chain, address);
   return {
-    deployment: deployment?.value?.deployment ?? null,
-    source: {
-      abi: contract.value.abi,
-      source: contract.value.source,
-      implementation: implementation
-        ? {
-            address: implementation,
-            abi: implementationAbi,
-            source: implementationSource,
-          }
-        : null,
-    },
+    deployment,
+    source,
   };
 }
 
@@ -167,7 +122,7 @@ async function getSource(
     : await getImplementation(client, address);
   // Store the implementation in the cache
   if (!useCachedImplementation) {
-    await minioService.setContract(chain, address, {
+    await minioService.setSource(chain, address, {
       ...contract.value,
       implementation,
     });
@@ -196,10 +151,6 @@ async function getSource(
   };
 }
 
-function toErrorSelector(abi: AbiError): Hex {
-  return slice(keccak256(toHex(formatAbiItem(abi))), 0, 4);
-}
-
 async function getAbi(
   chain: ChainId,
   contracts: Record<
@@ -224,7 +175,8 @@ async function getAbi(
       errors?: string[];
     },
   ): Promise<Abis[Address] | null> {
-    const contractAbi = await fetchContractAbi(chain, address);
+    const contract = await getSource(chain, address);
+    const contractAbi = await extractContractAbi(contract, chain, address);
     if (!contractAbi) {
       return null;
     }
@@ -310,11 +262,11 @@ async function getDeployment(
     minioSecretKey,
     minioBucket,
   );
-  const contract = await fetchDeployment(minioService, chain, address);
-  if (!contract.value) {
+  const deployment = await fetchDeployment(minioService, chain, address);
+  if (!deployment.value) {
     return null;
   }
-  return contract.value.deployment ?? null;
+  return deployment.value;
 }
 
 async function guessAbi(chain: ChainId, address: Address): Promise<Abi | null> {
@@ -351,56 +303,42 @@ async function guessAbi(chain: ChainId, address: Address): Promise<Abi | null> {
   }
 }
 
-async function fetchContractAbi(
+async function extractContractAbi(
+  contract: SourceCodeResponse | null,
   chain: ChainId,
   address: Address,
 ): Promise<Abi | null> {
-  const minioService = new MinioService(
-    minioPublicEndpoint,
-    minioAccessKey,
-    minioSecretKey,
-    minioBucket,
-  );
-  const contract = await fetchContract(minioService, chain, address);
-  if (!contract.value) {
+  if (!contract) {
     return null;
   }
-  const implementation = contract.value.implementation;
+  const implementation = contract.implementation;
   if (!implementation) {
-    if (contract.value.abi !== null) {
-      return contract.value.abi;
+    if (contract.abi !== null) {
+      return contract.abi;
     }
     return guessAbi(chain, address);
   }
-  const implementationContract = await fetchContract(
-    minioService,
-    chain,
-    implementation,
-  );
-  if (!implementationContract.value) {
-    return null;
+  if (implementation.abi !== null) {
+    return implementation.abi;
   }
-  if (implementationContract.value.abi !== null) {
-    return implementationContract.value.abi;
-  }
-  return guessAbi(chain, implementation);
+  return guessAbi(chain, implementation.address);
 }
 
 async function fetchContract(
   minioService: MinioService,
   chain: ChainId,
   address: Address,
-): Promise<OptionalContractCache> {
+): Promise<OptionalContractSourceCache> {
   const etherscanService = new EtherscanService(chain);
-  const cachedCode = await minioService.getContract(chain, address);
-  if (cachedCode) {
+  const cachedSource = await minioService.getSource(chain, address);
+  if (cachedSource) {
     if (
-      !!cachedCode.value.source ||
-      cachedCode.timestamp > Date.now() - NO_SOURCE_CACHE_DURATION
+      !!cachedSource.value.source ||
+      cachedSource.timestamp > Date.now() - NO_SOURCE_CACHE_DURATION
     ) {
       return {
-        value: cachedCode.value,
-        timestamp: cachedCode.timestamp,
+        value: cachedSource.value,
+        timestamp: cachedSource.timestamp,
       };
     }
   }
@@ -412,13 +350,12 @@ async function fetchContract(
       timestamp: null,
     };
   }
-  const contract: Contract = {
-    deployment: cachedCode?.value.deployment ?? null,
+  const contract: ContractSource = {
     abi: code?.abi ?? null,
     source: code?.source ?? null,
     implementation: code?.implementation ?? null,
   };
-  await minioService.setContract(chain, address, contract);
+  await minioService.setSource(chain, address, contract);
   return {
     value: contract,
     timestamp: null,
@@ -429,13 +366,13 @@ async function fetchDeployment(
   minioService: MinioService,
   chain: ChainId,
   address: Address,
-): Promise<OptionalContractCache> {
+): Promise<OptionalContractDeploymentCache> {
   const etherscanService = new EtherscanService(chain);
-  const cachedContract = await minioService.getContract(chain, address);
-  if (cachedContract && cachedContract.value.deployment) {
+  const cachedDeployment = await minioService.getDeployment(chain, address);
+  if (cachedDeployment) {
     return {
-      value: cachedContract.value,
-      timestamp: cachedContract.timestamp,
+      value: cachedDeployment.value,
+      timestamp: cachedDeployment.timestamp,
     };
   }
   const creation = await etherscanService.getContractCreation(address);
@@ -445,20 +382,17 @@ async function fetchDeployment(
       timestamp: null,
     };
   }
-  const contract: Contract = {
-    deployment: creation
-      ? {
-          deployer: creation.contractCreator,
-          transactionHash: creation.txHash,
-        }
-      : null,
-    abi: cachedContract?.value.abi ?? null,
-    source: cachedContract?.value.source ?? null,
-    implementation: cachedContract?.value.implementation ?? null,
-  };
-  await minioService.setContract(chain, address, contract);
+  const deployment: Deployment | null = creation
+    ? {
+        deployer: creation.contractCreator,
+        transactionHash: creation.txHash,
+      }
+    : null;
+  if (deployment) {
+    await minioService.setDeployment(chain, address, deployment);
+  }
   return {
-    value: contract,
+    value: deployment,
     timestamp: null,
   };
 }

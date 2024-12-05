@@ -6,15 +6,19 @@ import { Abi, Address } from 'viem';
 import { ChainId } from '@/utils/chains';
 import { SourceCode, Deployment } from '@/utils/contracts';
 
-interface Contract {
-  deployment: Deployment | null;
+interface ContractSource {
   source: SourceCode | null;
   abi: Abi | null;
   implementation: Address | null;
 }
 
-interface ContractCache {
-  value: Contract;
+interface ContractSourceCache {
+  value: ContractSource;
+  timestamp: number;
+}
+
+interface ContractDeploymentCache {
+  value: Deployment;
   timestamp: number;
 }
 
@@ -55,11 +59,11 @@ class Service {
     });
   }
 
-  async getContract(
+  async getSource(
     chain: ChainId,
     address: Address,
-  ): Promise<ContractCache | null> {
-    const key = `contracts/${chain}/${address}.json`;
+  ): Promise<ContractSourceCache | null> {
+    const key = `sources/${chain}/${address}.json`;
     try {
       const file = await this.client.getObject(this.bucket, key);
       const fileString = await streamToString(file);
@@ -69,14 +73,41 @@ class Service {
     }
   }
 
-  async setContract(
+  async setSource(
     chain: ChainId,
     address: Address,
-    code: Contract,
+    source: ContractSource,
   ): Promise<void> {
-    const key = `contracts/${chain}/${address}.json`;
-    const cache: ContractCache = {
-      value: code,
+    const key = `sources/${chain}/${address}.json`;
+    const cache: ContractSourceCache = {
+      value: source,
+      timestamp: Date.now(),
+    };
+    await this.client.putObject(this.bucket, key, JSON.stringify(cache));
+  }
+
+  async getDeployment(
+    chain: ChainId,
+    address: Address,
+  ): Promise<ContractDeploymentCache | null> {
+    const key = `deployments/${chain}/${address}.json`;
+    try {
+      const file = await this.client.getObject(this.bucket, key);
+      const fileString = await streamToString(file);
+      return JSON.parse(fileString);
+    } catch {
+      return null;
+    }
+  }
+
+  async setDeployment(
+    chain: ChainId,
+    address: Address,
+    deployment: Deployment,
+  ): Promise<void> {
+    const key = `deployments/${chain}/${address}.json`;
+    const cache: ContractDeploymentCache = {
+      value: deployment,
       timestamp: Date.now(),
     };
     await this.client.putObject(this.bucket, key, JSON.stringify(cache));
@@ -84,4 +115,4 @@ class Service {
 }
 
 export default Service;
-export type { Contract, ContractCache };
+export type { ContractSource, ContractSourceCache, ContractDeploymentCache };
