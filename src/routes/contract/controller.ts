@@ -354,7 +354,9 @@ async function fetchContract(
   const contract: ContractSource = {
     abi: code?.abi ?? null,
     source: code?.source ?? null,
-    implementation: code?.implementation ?? null,
+    // Don't use the implementation address from etherscan
+    // Too many false positives
+    implementation: null,
   };
   await minioService.setSource(chain, address, contract);
   return {

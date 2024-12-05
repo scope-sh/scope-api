@@ -72,9 +72,6 @@ async function getImplementation(
   client: PublicClient,
   address: Address,
 ): Promise<Address | null> {
-  if (isKnownNonProxy(address)) {
-    return null;
-  }
   // Call-based detection (Safe-like proxies)
   const callResults = await client.multicall({
     contracts: [
@@ -150,17 +147,5 @@ async function getImplementation(
   return null;
 }
 
-function isKnownNonProxy(address: Address): boolean {
-  return [
-    '0x6723b44abeec4e71ebe3232bd5b455805badd22f', // ZeroDev Kernel Factory V3.0
-    '0xaac5d4240af87249b3f71bc8e4a2cae074a3e419', // ZeroDev Kernel Factory V3.1
-    '0x000000000000dd366cc2e4432bb998e41dfd47c7', // Nani Factory V0.0.0
-    '0x0000000000008dd2574908774527fd6da397d75b', // Nani Factory V1.1.1
-    '0x420dd381b31aef6683db6b902084cb0ffece40da', // Aerodrome Factory
-    '0xf1046053aa5682b4f9a81b5481394da16be5ff5a', // Velodrome Factory V2
-    '0x0ba5ed0c6aa8c49038f819e587e2633c4a9f428a', // Coinbase Smart Wallet Factory
-    '0x202a5598bdba2ce62bffa13ecccb04969719fad9', // Etherspot Modular V1 Account Implementation
-  ].includes(address);
-}
-
-export { getImplementation, isKnownNonProxy };
+// eslint-disable-next-line import-x/prefer-default-export
+export { getImplementation };

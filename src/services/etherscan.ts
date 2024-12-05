@@ -3,7 +3,6 @@ import { Abi, Address, Hex } from 'viem';
 
 import { SEPOLIA, ChainId } from '@/utils/chains';
 import { COMPILER, EVM, LANGUAGE, SourceCode } from '@/utils/contracts';
-import { isKnownNonProxy } from '@/utils/proxy';
 
 const etherscanApiKey = process.env.ETHERSCAN_API_KEY;
 
@@ -144,11 +143,7 @@ class Service {
     }
     // Ignore the implementation if it's the same as the address or a known proxy
     const implementation =
-      result.Implementation === address ||
-      result.Implementation === '' ||
-      isKnownNonProxy(address)
-        ? null
-        : (result.Implementation as Address);
+      result.Implementation === '' ? null : (result.Implementation as Address);
     return {
       source: {
         name,
