@@ -32,6 +32,7 @@ const DAY = 1000 * 60 * 60 * 24;
 const NO_SOURCE_CACHE_DURATION = 7 * DAY;
 const IMPLEMENTATION_CACHE_DURATION = DAY;
 const NO_IMPLEMENTATION_CACHE_DURATION = 30 * DAY;
+const NO_DEPLOYMENT_CACHE_DURATION = 30 * DAY;
 
 interface SourceCodeResponse {
   abi: Abi | null;
@@ -370,11 +371,17 @@ async function fetchDeployment(
   const etherscanService = new EtherscanService(chain);
   const cachedDeployment = await minioService.getDeployment(chain, address);
   if (cachedDeployment) {
-    return {
-      value: cachedDeployment.value,
-      timestamp: cachedDeployment.timestamp,
-    };
+    if (
+      !!cachedDeployment.value ||
+      cachedDeployment.timestamp > Date.now() - NO_DEPLOYMENT_CACHE_DURATION
+    ) {
+      return {
+        value: cachedDeployment.value,
+        timestamp: cachedDeployment.timestamp,
+      };
+    }
   }
+
   const creation = await etherscanService.getContractCreation(address);
   if (creation === undefined) {
     return {
@@ -388,9 +395,7 @@ async function fetchDeployment(
         transactionHash: creation.txHash,
       }
     : null;
-  if (deployment) {
-    await minioService.setDeployment(chain, address, deployment);
-  }
+  await minioService.setDeployment(chain, address, deployment);
   return {
     value: deployment,
     timestamp: null,

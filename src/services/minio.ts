@@ -18,7 +18,7 @@ interface ContractSourceCache {
 }
 
 interface ContractDeploymentCache {
-  value: Deployment;
+  value: Deployment | null;
   timestamp: number;
 }
 
@@ -103,7 +103,7 @@ class Service {
   async setDeployment(
     chain: ChainId,
     address: Address,
-    deployment: Deployment,
+    deployment: Deployment | null,
   ): Promise<void> {
     const key = `deployments/${chain}/${address}.json`;
     const cache: ContractDeploymentCache = {
