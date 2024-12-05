@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "@hono/zod-validator": "^0.4.1",
-    "@shazow/whatsabi": "^0.15.4",
+    "@shazow/whatsabi": "^0.17.0",
     "drizzle-orm": "^0.37.0",
     "evm-providers": "^0.4.6",
     "hono": "^4.6.12",
