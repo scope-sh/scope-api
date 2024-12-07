@@ -1,6 +1,8 @@
 import { padHex, zeroAddress, zeroHash } from 'viem';
 import type { Address, Hex, PublicClient } from 'viem';
+import { getStorageAt, multicall } from 'viem/actions';
 
+import eip897ProxyAbi from '@/abi/eip897Proxy.js';
 import safeProxyAbi from '@/abi/safeProxy.js';
 
 // Storage slots for common proxy implementations
@@ -40,17 +42,6 @@ const slotMap: Record<string, Hex> = {
   // DIAMOND_STORAGE: '0xc8fcad8db84d3cc18b4c41d551ea0ee66dd599cde068d998e57d5e09332c131b',
 };
 
-async function getStorage(
-  client: PublicClient,
-  address: Address,
-  slots: Hex[],
-): Promise<Hex[]> {
-  const results = await Promise.all(
-    slots.map((slot) => client.getStorageAt({ address, slot })),
-  );
-  return results.filter((result) => !!result);
-}
-
 function toAddress(slotValue: Hex | null): Address | null {
   if (!slotValue) {
     return null;
@@ -66,6 +57,54 @@ function toAddress(slotValue: Hex | null): Address | null {
   return address;
 }
 
+async function getByImplementationCall(
+  client: PublicClient,
+  address: Address,
+): Promise<Address | null> {
+  const results = await multicall(client, {
+    contracts: [
+      {
+        address,
+        abi: eip897ProxyAbi,
+        functionName: 'implementation',
+      },
+    ],
+  });
+  const result = results[0];
+  if (result.status === 'failure') {
+    return null;
+  }
+  const implementation = result.result.toLowerCase() as Address;
+  if (implementation === zeroAddress) {
+    return null;
+  }
+  return implementation;
+}
+
+async function getByMasterCopyCall(
+  client: PublicClient,
+  address: Address,
+): Promise<Address | null> {
+  const results = await multicall(client, {
+    contracts: [
+      {
+        address,
+        abi: safeProxyAbi,
+        functionName: 'masterCopy',
+      },
+    ],
+  });
+  const result = results[0];
+  if (result.status === 'failure') {
+    return null;
+  }
+  const implementation = result.result.toLowerCase() as Address;
+  if (implementation === zeroAddress) {
+    return null;
+  }
+  return implementation;
+}
+
 // Attempts to get the proxy implementation address for a given address
 // Note that this may not succeed even if the provided address is a proxy
 async function getImplementation(
@@ -73,32 +112,34 @@ async function getImplementation(
   address: Address,
 ): Promise<Address | null> {
   // Call-based detection (Safe-like proxies)
-  const callResults = await client.multicall({
-    contracts: [
-      {
-        abi: safeProxyAbi,
-        address: address,
-        functionName: 'masterCopy',
-        args: [],
-      },
-    ],
-  });
-  const masterCopyResult = callResults[0];
-  if (masterCopyResult.status === 'success') {
-    const address = masterCopyResult.result.toLowerCase() as Address;
-    if (address !== zeroAddress) {
-      return address;
-    }
+  const masterCopy = await getByMasterCopyCall(client, address);
+  if (masterCopy) {
+    return masterCopy;
   }
   // Slot-based detection
   const slots = Object.values(slotMap);
   const addressSlot = padHex(address);
   slots.push(addressSlot);
-  const slotValues = await getStorage(client, address, slots);
-  for (const slot of slotValues) {
-    const slotAddress = toAddress(slot);
-    if (slotAddress) {
+  const slotValues = await Promise.all(
+    slots.map((slot) => getStorageAt(client, { address, slot })),
+  );
+  for (const slot of slots) {
+    const slotIndex = slots.indexOf(slot);
+    const slotValue = slotValues[slotIndex];
+    if (!slotValue) {
+      continue;
+    }
+    const slotAddress = toAddress(slotValue);
+    if (!slotAddress) {
+      continue;
+    }
+    if (slot !== slotMap['EIP1967_BEACON']) {
       return slotAddress;
+    }
+    // Beacon proxies require a 2-step resolution
+    const implementation = await getByImplementationCall(client, slotAddress);
+    if (implementation) {
+      return implementation;
     }
   }
   // Bytecode-based detection
