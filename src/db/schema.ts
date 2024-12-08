@@ -38,11 +38,7 @@ const labels = pgTable(
     iconUrl: text('icon_url'),
     metadata: jsonb('metadata').$type<Record<string, unknown>>(),
   },
-  (table) => {
-    return {
-      idx: index('idx_labels').on(table.chain, table.address),
-    };
-  },
+  (table) => [index('idx_labels').on(table.chain, table.address)],
 );
 
 const contractCode = pgTable('contract_code', {
@@ -61,21 +57,18 @@ const contracts = pgTable(
       .references(() => contractCode.codeHash)
       .notNull(),
   },
-  (table) => ({
-    uniqueCreationRuntimeHash: uniqueIndex('contracts_pseudo_pkey').on(
+  (table) => [
+    uniqueIndex('contracts_pseudo_pkey').on(
       table.creationCodeHash,
       table.runtimeCodeHash,
     ),
-    creationCodeHashIndex: index('contracts_creation_code_hash').on(
+    index('contracts_creation_code_hash').on(table.creationCodeHash),
+    index('contracts_runtime_code_hash').on(table.runtimeCodeHash),
+    index('contracts_creation_code_hash_runtime_code_hash').on(
       table.creationCodeHash,
-    ),
-    runtimeCodeHashIndex: index('contracts_runtime_code_hash').on(
       table.runtimeCodeHash,
     ),
-    creationRuntimeCodeHashIndex: index(
-      'contracts_creation_code_hash_runtime_code_hash',
-    ).on(table.creationCodeHash, table.runtimeCodeHash),
-  }),
+  ],
 );
 
 const contractDeployments = pgTable(
@@ -92,18 +85,18 @@ const contractDeployments = pgTable(
       .references(() => contracts.id)
       .notNull(),
   },
-  (table) => ({
-    uniqueChainAddressTransaction: uniqueIndex(
-      'contract_deployments_pseudo_pkey',
-    ).on(table.chainId, table.address, table.transactionHash),
-    contractIdIndex: index('contract_deployments_contract_id').on(
-      table.contractId,
+  (table) => [
+    uniqueIndex('contract_deployments_pseudo_pkey').on(
+      table.chainId,
+      table.address,
+      table.transactionHash,
     ),
-    chainIdAddressIndex: index('contract_deployments_chain_id_address').on(
+    index('contract_deployments_contract_id').on(table.contractId),
+    index('contract_deployments_chain_id_address').on(
       table.chainId,
       table.address,
     ),
-  }),
+  ],
 );
 
 const compiledContracts = pgTable(
@@ -139,20 +132,16 @@ const compiledContracts = pgTable(
       .notNull(),
     runtimeCodeArtifacts: jsonb('runtime_code_artifacts').notNull(),
   },
-  (table) => ({
-    uniqueCompiledContracts: uniqueIndex('compiled_contracts_pseudo_pkey').on(
+  (table) => [
+    uniqueIndex('compiled_contracts_pseudo_pkey').on(
       table.compiler,
       table.language,
       table.creationCodeHash,
       table.runtimeCodeHash,
     ),
-    creationCodeHashIndex: index('compiled_contracts_creation_code_hash').on(
-      table.creationCodeHash,
-    ),
-    runtimeCodeHashIndex: index('compiled_contracts_runtime_code_hash').on(
-      table.runtimeCodeHash,
-    ),
-  }),
+    index('compiled_contracts_creation_code_hash').on(table.creationCodeHash),
+    index('compiled_contracts_runtime_code_hash').on(table.runtimeCodeHash),
+  ],
 );
 
 const verifiedContracts = pgTable(
@@ -184,18 +173,14 @@ const verifiedContracts = pgTable(
     runtimeValues: jsonb('runtime_values'),
     runtimeTransformations: jsonb('runtime_transformations'),
   },
-  (table) => ({
-    uniqueVerifiedContracts: uniqueIndex('verified_contracts_pseudo_pkey').on(
+  (table) => [
+    uniqueIndex('verified_contracts_pseudo_pkey').on(
       table.compilationId,
       table.deploymentId,
     ),
-    deploymentIdIndex: index('verified_contracts_deployment_id').on(
-      table.deploymentId,
-    ),
-    compilationIdIndex: index('verified_contracts_compilation_id').on(
-      table.compilationId,
-    ),
-  }),
+    index('verified_contracts_deployment_id').on(table.deploymentId),
+    index('verified_contracts_compilation_id').on(table.compilationId),
+  ],
 );
 
 const proxies = pgTable(
@@ -205,12 +190,9 @@ const proxies = pgTable(
     chainId: numeric('chain_id').notNull(),
     address: bytea('address').notNull(),
   },
-  (table) => ({
-    uniqueChainAddress: uniqueIndex('proxies_pseudo_pkey').on(
-      table.chainId,
-      table.address,
-    ),
-  }),
+  (table) => [
+    uniqueIndex('proxies_pseudo_pkey').on(table.chainId, table.address),
+  ],
 );
 
 const proxyTargets = pgTable('proxy_targets', {
