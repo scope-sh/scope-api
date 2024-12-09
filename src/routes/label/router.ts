@@ -12,10 +12,14 @@ import {
   fetchLabels,
 } from './controller';
 
+const env = process.env.NODE_ENV;
+
 const CACHE_DURATION = 1000 * 60 * 60 * 24;
 let lastUpdate = Date.now();
 
-await fetchLabels();
+if (env === 'production') {
+  await fetchLabels();
+}
 
 async function updateCacheIfStale(_c: Context, next: Next): Promise<void> {
   const now = Date.now();
