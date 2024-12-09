@@ -57,12 +57,25 @@ function toAddress(slotValue: Hex | null): Address | null {
   return address;
 }
 
-async function getByImplementationCall(
+// Attempts to get the proxy implementation address for a given address
+// Note that this may not succeed even if the provided address is a proxy
+async function getImplementation(
   client: PublicClient,
   address: Address,
 ): Promise<Address | null> {
-  const results = await multicall(client, {
+  // Call-based detection
+  const callResults = await multicall(client, {
     contracts: [
+      {
+        address,
+        abi: safeProxyAbi,
+        functionName: 'masterCopy',
+      },
+      {
+        address,
+        abi: eip897ProxyAbi,
+        functionName: 'proxyType',
+      },
       {
         address,
         abi: eip897ProxyAbi,
@@ -70,51 +83,28 @@ async function getByImplementationCall(
       },
     ],
   });
-  const result = results[0];
-  if (result.status === 'failure') {
-    return null;
+  const masterCopyResult = callResults[0];
+  const proxyTypeResult = callResults[1];
+  const implementationResult = callResults[2];
+  if (masterCopyResult.status === 'success') {
+    // Safe-like proxies
+    const masterCopyAddress = masterCopyResult.result.toLowerCase() as Address;
+    if (masterCopyAddress !== zeroAddress) {
+      return masterCopyAddress;
+    }
   }
-  const implementation = result.result.toLowerCase() as Address;
-  if (implementation === zeroAddress) {
-    return null;
-  }
-  return implementation;
-}
-
-async function getByMasterCopyCall(
-  client: PublicClient,
-  address: Address,
-): Promise<Address | null> {
-  const results = await multicall(client, {
-    contracts: [
-      {
-        address,
-        abi: safeProxyAbi,
-        functionName: 'masterCopy',
-      },
-    ],
-  });
-  const result = results[0];
-  if (result.status === 'failure') {
-    return null;
-  }
-  const implementation = result.result.toLowerCase() as Address;
-  if (implementation === zeroAddress) {
-    return null;
-  }
-  return implementation;
-}
-
-// Attempts to get the proxy implementation address for a given address
-// Note that this may not succeed even if the provided address is a proxy
-async function getImplementation(
-  client: PublicClient,
-  address: Address,
-): Promise<Address | null> {
-  // Call-based detection (Safe-like proxies)
-  const masterCopy = await getByMasterCopyCall(client, address);
-  if (masterCopy) {
-    return masterCopy;
+  if (
+    proxyTypeResult.status === 'success' &&
+    implementationResult.status === 'success'
+  ) {
+    // EIP-897 proxies
+    if (proxyTypeResult.result === 1n || proxyTypeResult.result === 2n) {
+      const implementationAddress =
+        implementationResult.result.toLowerCase() as Address;
+      if (implementationAddress !== zeroAddress) {
+        return implementationAddress;
+      }
+    }
   }
   // Slot-based detection
   const slots = Object.values(slotMap);
@@ -137,9 +127,12 @@ async function getImplementation(
       return slotAddress;
     }
     // Beacon proxies require a 2-step resolution
-    const implementation = await getByImplementationCall(client, slotAddress);
-    if (implementation) {
-      return implementation;
+    if (implementationResult.status === 'success') {
+      const implementationAddress =
+        implementationResult.result.toLowerCase() as Address;
+      if (implementationAddress !== zeroAddress) {
+        return implementationAddress;
+      }
     }
   }
   // Bytecode-based detection
