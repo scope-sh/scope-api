@@ -12,6 +12,8 @@ import {
   POLYGON,
   POLYGON_AMOY,
   SEPOLIA,
+  MODE,
+  MODE_SEPOLIA,
 } from '@/utils/chains';
 import {
   LabelType,
@@ -166,6 +168,10 @@ function getErc20Icon(chain: ChainId, address: string): string | undefined {
       case POLYGON:
         return 'polygon';
       case POLYGON_AMOY:
+        return null;
+      case MODE:
+        return null;
+      case MODE_SEPOLIA:
         return null;
     }
   }

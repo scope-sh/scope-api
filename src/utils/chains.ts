@@ -10,6 +10,8 @@ import {
   polygonAmoy,
   arbitrum,
   arbitrumSepolia,
+  mode,
+  modeTestnet,
 } from 'viem/chains';
 import { z } from 'zod';
 
@@ -23,6 +25,8 @@ const BASE = base.id;
 const BASE_SEPOLIA = baseSepolia.id;
 const ARBITRUM = arbitrum.id;
 const ARBITRUM_SEPOLIA = arbitrumSepolia.id;
+const MODE = mode.id;
+const MODE_SEPOLIA = modeTestnet.id;
 
 const CHAINS: ChainId[] = [
   ETHEREUM,
@@ -35,6 +39,8 @@ const CHAINS: ChainId[] = [
   BASE_SEPOLIA,
   ARBITRUM,
   ARBITRUM_SEPOLIA,
+  MODE,
+  MODE_SEPOLIA,
 ];
 
 const chainSchema = z.union([
@@ -49,6 +55,8 @@ const chainSchema = z.union([
   z.literal(POLYGON_AMOY.toString()),
   z.literal(ARBITRUM.toString()),
   z.literal(ARBITRUM_SEPOLIA.toString()),
+  z.literal(MODE.toString()),
+  z.literal(MODE_SEPOLIA.toString()),
 ]);
 
 type ChainId =
@@ -61,7 +69,9 @@ type ChainId =
   | typeof BASE
   | typeof BASE_SEPOLIA
   | typeof ARBITRUM
-  | typeof ARBITRUM_SEPOLIA;
+  | typeof ARBITRUM_SEPOLIA
+  | typeof MODE
+  | typeof MODE_SEPOLIA;
 
 function getChainData(chain: ChainId): ChainData {
   switch (chain) {
@@ -85,6 +95,10 @@ function getChainData(chain: ChainId): ChainData {
       return arbitrum;
     case ARBITRUM_SEPOLIA:
       return arbitrumSepolia;
+    case MODE:
+      return mode;
+    case MODE_SEPOLIA:
+      return modeTestnet;
   }
 }
 
@@ -104,6 +118,8 @@ export {
   BASE_SEPOLIA,
   ARBITRUM,
   ARBITRUM_SEPOLIA,
+  MODE,
+  MODE_SEPOLIA,
   getChainData,
   parseChainId,
   chainSchema,
