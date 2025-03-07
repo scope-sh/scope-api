@@ -24,28 +24,28 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@hono/zod-validator": "^0.4.1",
-    "@shazow/whatsabi": "^0.17.0",
-    "drizzle-orm": "^0.37.0",
-    "evm-providers": "^0.4.6",
-    "hono": "^4.6.12",
-    "ky": "^1.7.2",
-    "minio": "^8.0.2",
-    "minisearch": "^7.1.1",
-    "pg": "^8.13.1",
-    "viem": "^2.21.54",
-    "zod": "^3.23.8"
+    "@hono/zod-validator": "^0.4.3",
+    "@shazow/whatsabi": "^0.20.0",
+    "drizzle-orm": "^0.40.0",
+    "evm-providers": "^0.5.0",
+    "hono": "^4.7.4",
+    "ky": "^1.7.5",
+    "minio": "^8.0.4",
+    "minisearch": "^7.1.2",
+    "pg": "^8.13.3",
+    "viem": "^2.23.7",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@eslint/js": "^9.16.0",
-    "@types/bun": "^1.1.14",
-    "@types/pg": "^8.11.10",
-    "eslint": "^9.16.0",
-    "eslint-import-resolver-typescript": "^3.7.0",
-    "eslint-plugin-import-x": "^4.5.0",
-    "prettier": "^3.4.2",
-    "tsx": "^4.19.2",
+    "@eslint/js": "^9.21.0",
+    "@types/bun": "^1.2.4",
+    "@types/pg": "^8.11.11",
+    "eslint": "^9.21.0",
+    "eslint-import-resolver-typescript": "^3.8.3",
+    "eslint-plugin-import-x": "^4.6.1",
+    "prettier": "^3.5.3",
+    "tsx": "^4.19.3",
     "typescript": "^5.8.2",
-    "typescript-eslint": "^8.17.0"
+    "typescript-eslint": "^8.26.0"
   }
 }
