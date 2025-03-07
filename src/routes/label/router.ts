@@ -1,7 +1,7 @@
-import { zValidator } from '@hono/zod-validator';
+import { vValidator } from '@hono/valibot-validator';
 import { Context, Hono, Next } from 'hono';
+import * as v from 'valibot';
 import { Address } from 'viem';
-import { z } from 'zod';
 
 import { chainSchema, parseChainId } from '@/utils/chains';
 
@@ -34,10 +34,10 @@ const router = new Hono()
   .get(
     '/all',
     updateCacheIfStale,
-    zValidator(
+    vValidator(
       'query',
-      z.object({
-        address: z.string(),
+      v.object({
+        address: v.string(),
         chain: chainSchema,
       }),
     ),
@@ -51,16 +51,16 @@ const router = new Hono()
   .post(
     '/primary',
     updateCacheIfStale,
-    zValidator(
+    vValidator(
       'query',
-      z.object({
+      v.object({
         chain: chainSchema,
       }),
     ),
-    zValidator(
+    vValidator(
       'json',
-      z.object({
-        addresses: z.array(z.string()),
+      v.object({
+        addresses: v.array(v.string()),
       }),
     ),
     async (c) => {
@@ -77,10 +77,10 @@ const router = new Hono()
   .get(
     '/search',
     updateCacheIfStale,
-    zValidator(
+    vValidator(
       'query',
-      z.object({
-        query: z.string(),
+      v.object({
+        query: v.string(),
         chain: chainSchema,
       }),
     ),

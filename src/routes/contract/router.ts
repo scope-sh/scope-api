@@ -1,7 +1,7 @@
-import { zValidator } from '@hono/zod-validator';
+import { vValidator } from '@hono/valibot-validator';
 import { Hono } from 'hono';
+import * as v from 'valibot';
 import { Address } from 'viem';
-import { z } from 'zod';
 
 import { chainSchema, parseChainId } from '@/utils/chains';
 
@@ -10,10 +10,10 @@ import { getAll, getAbi, getSource, getDeployment } from './controller';
 const router = new Hono()
   .get(
     '/all',
-    zValidator(
+    vValidator(
       'query',
-      z.object({
-        address: z.string(),
+      v.object({
+        address: v.string(),
         chain: chainSchema,
       }),
     ),
@@ -26,10 +26,10 @@ const router = new Hono()
   )
   .get(
     '/source',
-    zValidator(
+    vValidator(
       'query',
-      z.object({
-        address: z.string(),
+      v.object({
+        address: v.string(),
         chain: chainSchema,
       }),
     ),
@@ -42,23 +42,23 @@ const router = new Hono()
   )
   .post(
     '/abi',
-    zValidator(
+    vValidator(
       'query',
-      z.object({
+      v.object({
         chain: chainSchema,
       }),
     ),
-    zValidator(
+    vValidator(
       'json',
-      z.object({
-        contracts: z.record(
-          z.string(),
-          z.object({
-            constructors: z.boolean().optional(),
-            functionNames: z.array(z.string()).optional(),
-            functions: z.array(z.string()).optional(),
-            events: z.array(z.string()).optional(),
-            errors: z.array(z.string()).optional(),
+      v.object({
+        contracts: v.record(
+          v.string(),
+          v.object({
+            constructors: v.optional(v.boolean()),
+            functionNames: v.optional(v.array(v.string())),
+            functions: v.optional(v.array(v.string())),
+            events: v.optional(v.array(v.string())),
+            errors: v.optional(v.array(v.string())),
           }),
         ),
       }),
@@ -73,10 +73,10 @@ const router = new Hono()
   )
   .get(
     '/deployment',
-    zValidator(
+    vValidator(
       'query',
-      z.object({
-        address: z.string(),
+      v.object({
+        address: v.string(),
         chain: chainSchema,
       }),
     ),

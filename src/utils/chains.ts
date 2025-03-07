@@ -1,3 +1,4 @@
+import * as v from 'valibot';
 import { Chain as ChainData } from 'viem';
 import {
   mainnet,
@@ -13,7 +14,6 @@ import {
   mode,
   modeTestnet,
 } from 'viem/chains';
-import { z } from 'zod';
 
 const ETHEREUM = mainnet.id;
 const SEPOLIA = sepolia.id;
@@ -43,20 +43,20 @@ const CHAINS: ChainId[] = [
   MODE_SEPOLIA,
 ];
 
-const chainSchema = z.union([
-  z.literal(ETHEREUM.toString()),
-  z.literal(SEPOLIA.toString()),
-  z.literal(OPTIMISM.toString()),
-  z.literal(OPTIMISM_SEPOLIA.toString()),
-  z.literal(OPTIMISM.toString()),
-  z.literal(BASE.toString()),
-  z.literal(BASE_SEPOLIA.toString()),
-  z.literal(POLYGON.toString()),
-  z.literal(POLYGON_AMOY.toString()),
-  z.literal(ARBITRUM.toString()),
-  z.literal(ARBITRUM_SEPOLIA.toString()),
-  z.literal(MODE.toString()),
-  z.literal(MODE_SEPOLIA.toString()),
+const chainSchema = v.union([
+  v.literal(ETHEREUM.toString()),
+  v.literal(SEPOLIA.toString()),
+  v.literal(OPTIMISM.toString()),
+  v.literal(OPTIMISM_SEPOLIA.toString()),
+  v.literal(OPTIMISM.toString()),
+  v.literal(BASE.toString()),
+  v.literal(BASE_SEPOLIA.toString()),
+  v.literal(POLYGON.toString()),
+  v.literal(POLYGON_AMOY.toString()),
+  v.literal(ARBITRUM.toString()),
+  v.literal(ARBITRUM_SEPOLIA.toString()),
+  v.literal(MODE.toString()),
+  v.literal(MODE_SEPOLIA.toString()),
 ]);
 
 type ChainId =
