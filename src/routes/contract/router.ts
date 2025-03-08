@@ -5,7 +5,7 @@ import { Address } from 'viem';
 
 import { chainSchema, parseChainId } from '@/utils/chains';
 
-import { getAll, getAbi, getSource, getDeployment } from './controller';
+import { getAll, getAbi, getSource, getDeployment, getImplementationAddress } from './controller';
 
 const router = new Hono()
   .get(
@@ -69,6 +69,27 @@ const router = new Hono()
       const chainId = parseChainId(chain);
       const abi = await getAbi(chainId, contracts);
       return c.json(abi);
+    },
+  )
+  .get(
+    '/implementation',
+    vValidator(
+      'query',
+      v.object({
+        address: v.string(),
+        chain: chainSchema,
+      }),
+    ),
+    async (c) => {
+      const { address, chain } = c.req.valid('query');
+      const chainId = parseChainId(chain);
+      const implementationAddress = await getImplementationAddress(
+        chainId,
+        address.toLowerCase() as Address,
+      );
+      return c.json({
+        address: implementationAddress,
+      });
     },
   )
   .get(

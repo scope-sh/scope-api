@@ -264,6 +264,17 @@ async function getAbi(
   return abi;
 }
 
+async function getImplementationAddress(
+  chain: ChainId,
+  address: Address,
+): Promise<Address | null> {
+  const contract = await getSource(chain, address);
+  if (!contract) {
+    return null;
+  }
+  return contract.implementation?.address ?? null;
+}
+
 async function getDeployment(
   chain: ChainId,
   address: Address,
@@ -415,4 +426,4 @@ async function fetchDeployment(
   };
 }
 
-export { getAll, getSource, getAbi, getDeployment };
+export { getAll, getSource, getAbi, getImplementationAddress, getDeployment };
