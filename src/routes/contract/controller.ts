@@ -11,6 +11,8 @@ import {
   PublicClient,
   createPublicClient,
   http,
+  size,
+  slice,
   toEventSelector,
   toFunctionSelector,
 } from 'viem';
@@ -33,12 +35,19 @@ const DAY = 1000 * 60 * 60 * 24;
 const NO_SOURCE_CACHE_DURATION = 7 * DAY;
 const IMPLEMENTATION_CACHE_DURATION = DAY;
 const NO_IMPLEMENTATION_CACHE_DURATION = 30 * DAY;
+const DELEGATION_CACHE_DURATION = DAY;
+const NO_DELEGATION_CACHE_DURATION = DAY;
 const NO_DEPLOYMENT_CACHE_DURATION = 30 * DAY;
 
 interface SourceCodeResponse {
   abi: Abi | null;
   source: SourceCode | null;
   implementation: {
+    address: Address;
+    abi: Abi | null;
+    source: SourceCode | null;
+  } | null;
+  delegation: {
     address: Address;
     abi: Abi | null;
     source: SourceCode | null;
@@ -122,7 +131,41 @@ async function getSource(
   if (!contract.value) {
     return null;
   }
-  // Fetch impl address if there's no contract or if there is a contract but there is no implementation cached (unless we did that already recently)
+  const implementation = await fetchImplementation(
+    chain,
+    client,
+    contract,
+    address,
+  );
+  const delegation = await fetchDelegation(chain, client, contract, address);
+  return {
+    abi: contract.value.abi,
+    source: contract.value.source,
+    implementation,
+    delegation,
+  };
+}
+
+// Fetch implementation if there's no contract or if there is a contract but there is no implementation cached (unless we did that already recently)
+async function fetchImplementation(
+  chain: ChainId,
+  client: PublicClient,
+  contract: OptionalContractSourceCache,
+  address: Address,
+): Promise<{
+  address: Address;
+  abi: Abi | null;
+  source: SourceCode | null;
+} | null> {
+  const minioService = new MinioService(
+    minioPublicEndpoint,
+    minioAccessKey,
+    minioSecretKey,
+    minioBucket,
+  );
+  if (!contract.value) {
+    return null;
+  }
   const useCachedImplementation =
     contract.timestamp === null
       ? contract.value.implementation !== null
@@ -150,17 +193,84 @@ async function getSource(
     implementationContract && implementationContract.value
       ? implementationContract.value.source
       : null;
-  return {
-    abi: contract.value.abi,
-    source: contract.value.source,
-    implementation: implementation
-      ? {
-          address: implementation,
-          abi: implementationAbi,
-          source: implementationSource,
-        }
-      : null,
-  };
+  return implementation
+    ? {
+        address: implementation,
+        abi: implementationAbi,
+        source: implementationSource,
+      }
+    : null;
+}
+
+// Fetch delegation if there's no contract or if there is a contract but there is no delegation cached (unless we did that already recently)
+async function fetchDelegation(
+  chain: ChainId,
+  client: PublicClient,
+  contract: OptionalContractSourceCache,
+  address: Address,
+): Promise<{
+  address: Address;
+  abi: Abi | null;
+  source: SourceCode | null;
+} | null> {
+  async function getDelegation(
+    client: PublicClient,
+    address: Address,
+  ): Promise<Address | null> {
+    const code = await client.getCode({
+      address,
+    });
+    if (code === undefined) {
+      return null;
+    }
+    if (code.length === 0) {
+      return null;
+    }
+    if (size(code) !== 23) {
+      return null;
+    }
+    return slice(code, 3);
+  }
+
+  const minioService = new MinioService(
+    minioPublicEndpoint,
+    minioAccessKey,
+    minioSecretKey,
+    minioBucket,
+  );
+  if (!contract.value) {
+    return null;
+  }
+  const useCachedDelegation =
+    contract.timestamp === null
+      ? contract.value.delegation !== null
+      : contract.value.delegation === null
+        ? contract.timestamp > Date.now() - NO_DELEGATION_CACHE_DURATION
+        : contract.timestamp > Date.now() - DELEGATION_CACHE_DURATION;
+  const delegation = useCachedDelegation
+    ? contract.value.delegation
+    : await getDelegation(client, address);
+  // Store the delegation in the cache
+  if (!useCachedDelegation) {
+    await minioService.setSource(chain, address, {
+      ...contract.value,
+      delegation,
+    });
+  }
+  const delegationContract = delegation
+    ? await fetchContract(minioService, chain, delegation)
+    : null;
+  const delegationAbi =
+    delegationContract && delegationContract.value
+      ? delegationContract.value.abi
+      : null;
+  const delegationSource =
+    delegationContract && delegationContract.value
+      ? delegationContract.value.source
+      : null;
+  return delegation
+    ? { address: delegation, abi: delegationAbi, source: delegationSource }
+    : null;
 }
 
 async function getAbi(
@@ -335,16 +445,25 @@ async function extractContractAbi(
     return null;
   }
   const implementation = contract.implementation;
-  if (!implementation) {
-    if (contract.abi !== null) {
-      return contract.abi;
+  if (implementation) {
+    if (implementation.abi !== null) {
+      return implementation.abi;
     }
-    return guessAbi(chain, address);
+    return guessAbi(chain, implementation.address);
   }
-  if (implementation.abi !== null) {
-    return implementation.abi;
+
+  const delegation = contract.delegation;
+  if (delegation) {
+    if (delegation.abi !== null) {
+      return delegation.abi;
+    }
+    return guessAbi(chain, delegation.address);
   }
-  return guessAbi(chain, implementation.address);
+
+  if (contract.abi !== null) {
+    return contract.abi;
+  }
+  return guessAbi(chain, address);
 }
 
 async function fetchContract(
@@ -379,6 +498,7 @@ async function fetchContract(
     // Don't use the implementation address from etherscan
     // Too many false positives
     implementation: null,
+    delegation: null,
   };
   await minioService.setSource(chain, address, contract);
   return {

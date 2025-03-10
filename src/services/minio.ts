@@ -10,6 +10,7 @@ interface ContractSource {
   source: SourceCode | null;
   abi: Abi | null;
   implementation: Address | null;
+  delegation: Address | null;
 }
 
 interface ContractSourceCache {
