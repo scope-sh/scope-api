@@ -101,6 +101,8 @@ function getNamespaceById(id: LabelNamespaceId): LabelNamespace {
         return 'Openfort';
       case 'opensea-seaport':
         return 'OpenSea Seaport';
+      case 'otim':
+        return 'Otim';
       case 'parifi-v1':
         return 'Parifi V1';
       case 'particle':
@@ -236,6 +238,8 @@ function getNamespaceIcon(namespaceId: LabelNamespaceId): string | undefined {
         return undefined;
       case 'opensea-seaport':
         return 'opensea';
+      case 'otim':
+        return 'otim';
       case 'parifi-v1':
         return undefined;
       case 'particle':
