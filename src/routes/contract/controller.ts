@@ -16,11 +16,18 @@ import {
   toEventSelector,
   toFunctionSelector,
 } from 'viem';
-import { mode, modeTestnet } from 'viem/chains';
+import { celo, linea, mode, modeTestnet } from 'viem/chains';
 
 import EtherscanService from '@/services/etherscan';
 import MinioService, { type ContractSource } from '@/services/minio';
-import { ChainId, getChainData, MODE, MODE_SEPOLIA } from '@/utils/chains';
+import {
+  ChainId,
+  getChainData,
+  MODE,
+  MODE_SEPOLIA,
+  LINEA,
+  CELO,
+} from '@/utils/chains';
 import { Deployment, SourceCode } from '@/utils/contracts';
 import { toErrorSelector } from '@/utils/evm';
 import { getImplementation } from '@/utils/proxy';
@@ -87,6 +94,12 @@ function getClient(chain: ChainId, alchemyKey: string): PublicClient {
     }
     if (chain === MODE_SEPOLIA) {
       return modeTestnet.rpcUrls.default.http[0];
+    }
+    if (chain === LINEA) {
+      return linea.rpcUrls.default.http[0];
+    }
+    if (chain === CELO) {
+      return celo.rpcUrls.default.http[0];
     }
     return alchemy(chain, alchemyKey);
   }

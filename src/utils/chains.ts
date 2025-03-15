@@ -13,6 +13,12 @@ import {
   arbitrumSepolia,
   mode,
   modeTestnet,
+  linea,
+  arbitrumNova,
+  celo,
+  avalanche,
+  avalancheFuji,
+  gnosis,
 } from 'viem/chains';
 
 const ETHEREUM = mainnet.id;
@@ -27,6 +33,12 @@ const ARBITRUM = arbitrum.id;
 const ARBITRUM_SEPOLIA = arbitrumSepolia.id;
 const MODE = mode.id;
 const MODE_SEPOLIA = modeTestnet.id;
+const LINEA = linea.id;
+const ARBITRUM_NOVA = arbitrumNova.id;
+const CELO = celo.id;
+const AVALANCHE = avalanche.id;
+const AVALANCHE_FUJI = avalancheFuji.id;
+const GNOSIS = gnosis.id;
 
 const CHAINS: ChainId[] = [
   ETHEREUM,
@@ -41,6 +53,12 @@ const CHAINS: ChainId[] = [
   ARBITRUM_SEPOLIA,
   MODE,
   MODE_SEPOLIA,
+  LINEA,
+  ARBITRUM_NOVA,
+  CELO,
+  AVALANCHE,
+  AVALANCHE_FUJI,
+  GNOSIS,
 ];
 
 const chainSchema = v.union([
@@ -57,6 +75,12 @@ const chainSchema = v.union([
   v.literal(ARBITRUM_SEPOLIA.toString()),
   v.literal(MODE.toString()),
   v.literal(MODE_SEPOLIA.toString()),
+  v.literal(LINEA.toString()),
+  v.literal(ARBITRUM_NOVA.toString()),
+  v.literal(CELO.toString()),
+  v.literal(AVALANCHE.toString()),
+  v.literal(AVALANCHE_FUJI.toString()),
+  v.literal(GNOSIS.toString()),
 ]);
 
 type ChainId =
@@ -71,7 +95,13 @@ type ChainId =
   | typeof ARBITRUM
   | typeof ARBITRUM_SEPOLIA
   | typeof MODE
-  | typeof MODE_SEPOLIA;
+  | typeof MODE_SEPOLIA
+  | typeof LINEA
+  | typeof ARBITRUM_NOVA
+  | typeof CELO
+  | typeof AVALANCHE
+  | typeof AVALANCHE_FUJI
+  | typeof GNOSIS;
 
 function getChainData(chain: ChainId): ChainData {
   switch (chain) {
@@ -99,6 +129,18 @@ function getChainData(chain: ChainId): ChainData {
       return mode;
     case MODE_SEPOLIA:
       return modeTestnet;
+    case LINEA:
+      return linea;
+    case ARBITRUM_NOVA:
+      return arbitrumNova;
+    case CELO:
+      return celo;
+    case AVALANCHE:
+      return avalanche;
+    case AVALANCHE_FUJI:
+      return avalancheFuji;
+    case GNOSIS:
+      return gnosis;
   }
 }
 
@@ -120,6 +162,12 @@ export {
   ARBITRUM_SEPOLIA,
   MODE,
   MODE_SEPOLIA,
+  LINEA,
+  ARBITRUM_NOVA,
+  CELO,
+  AVALANCHE,
+  AVALANCHE_FUJI,
+  GNOSIS,
   getChainData,
   parseChainId,
   chainSchema,

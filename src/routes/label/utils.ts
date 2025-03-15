@@ -14,6 +14,12 @@ import {
   SEPOLIA,
   MODE,
   MODE_SEPOLIA,
+  LINEA,
+  ARBITRUM_NOVA,
+  CELO,
+  AVALANCHE,
+  AVALANCHE_FUJI,
+  GNOSIS,
 } from '@/utils/chains';
 import {
   LabelType,
@@ -175,6 +181,18 @@ function getErc20Icon(chain: ChainId, address: string): string | undefined {
         return null;
       case MODE_SEPOLIA:
         return null;
+      case LINEA:
+        return 'linea';
+      case ARBITRUM_NOVA:
+        return null;
+      case CELO:
+        return 'celo';
+      case AVALANCHE:
+        return 'avalanchec';
+      case AVALANCHE_FUJI:
+        return 'avalanchecfuji';
+      case GNOSIS:
+        return 'xdai';
     }
   }
   const chainName = getChainName(chain);
