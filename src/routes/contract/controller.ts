@@ -150,7 +150,6 @@ async function getSource(
     contract,
     address,
   );
-  contract.value.implementation = implementation?.address ?? null;
   const delegation = await fetchDelegation(chain, client, contract, address);
   return {
     abi: contract.value.abi,
@@ -207,6 +206,7 @@ async function fetchImplementation(
     implementationContract && implementationContract.value
       ? implementationContract.value.source
       : null;
+  contract.value.implementation = implementation;
   return implementation
     ? {
         address: implementation,
@@ -282,6 +282,7 @@ async function fetchDelegation(
     delegationContract && delegationContract.value
       ? delegationContract.value.source
       : null;
+  contract.value.delegation = delegation;
   return delegation
     ? { address: delegation, abi: delegationAbi, source: delegationSource }
     : null;
