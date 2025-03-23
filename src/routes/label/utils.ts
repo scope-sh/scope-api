@@ -13,7 +13,6 @@ import {
   POLYGON_AMOY,
   SEPOLIA,
   MODE,
-  MODE_SEPOLIA,
   LINEA,
   ARBITRUM_NOVA,
   CELO,
@@ -179,8 +178,6 @@ function getErc20Icon(chain: ChainId, address: string): string | undefined {
       case POLYGON_AMOY:
         return null;
       case MODE:
-        return null;
-      case MODE_SEPOLIA:
         return null;
       case LINEA:
         return 'linea';

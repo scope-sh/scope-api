@@ -12,7 +12,6 @@ import {
   arbitrum,
   arbitrumSepolia,
   mode,
-  modeTestnet,
   linea,
   arbitrumNova,
   celo,
@@ -33,7 +32,6 @@ const BASE_SEPOLIA = baseSepolia.id;
 const ARBITRUM = arbitrum.id;
 const ARBITRUM_SEPOLIA = arbitrumSepolia.id;
 const MODE = mode.id;
-const MODE_SEPOLIA = modeTestnet.id;
 const LINEA = linea.id;
 const ARBITRUM_NOVA = arbitrumNova.id;
 const CELO = celo.id;
@@ -54,7 +52,6 @@ const CHAINS: ChainId[] = [
   ARBITRUM,
   ARBITRUM_SEPOLIA,
   MODE,
-  MODE_SEPOLIA,
   LINEA,
   ARBITRUM_NOVA,
   CELO,
@@ -77,7 +74,6 @@ const chainSchema = v.union([
   v.literal(ARBITRUM.toString()),
   v.literal(ARBITRUM_SEPOLIA.toString()),
   v.literal(MODE.toString()),
-  v.literal(MODE_SEPOLIA.toString()),
   v.literal(LINEA.toString()),
   v.literal(ARBITRUM_NOVA.toString()),
   v.literal(CELO.toString()),
@@ -99,7 +95,6 @@ type ChainId =
   | typeof ARBITRUM
   | typeof ARBITRUM_SEPOLIA
   | typeof MODE
-  | typeof MODE_SEPOLIA
   | typeof LINEA
   | typeof ARBITRUM_NOVA
   | typeof CELO
@@ -132,8 +127,6 @@ function getChainData(chain: ChainId): ChainData {
       return arbitrumSepolia;
     case MODE:
       return mode;
-    case MODE_SEPOLIA:
-      return modeTestnet;
     case LINEA:
       return linea;
     case ARBITRUM_NOVA:
@@ -168,7 +161,6 @@ export {
   ARBITRUM,
   ARBITRUM_SEPOLIA,
   MODE,
-  MODE_SEPOLIA,
   LINEA,
   ARBITRUM_NOVA,
   CELO,
