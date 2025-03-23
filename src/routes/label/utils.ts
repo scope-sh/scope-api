@@ -20,6 +20,7 @@ import {
   AVALANCHE,
   AVALANCHE_FUJI,
   GNOSIS,
+  BSC,
 } from '@/utils/chains';
 import {
   LabelType,
@@ -193,6 +194,8 @@ function getErc20Icon(chain: ChainId, address: string): string | undefined {
         return 'avalanchecfuji';
       case GNOSIS:
         return 'xdai';
+      case BSC:
+        return 'binance';
     }
   }
   const chainName = getChainName(chain);

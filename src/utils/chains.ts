@@ -19,6 +19,7 @@ import {
   avalanche,
   avalancheFuji,
   gnosis,
+  bsc,
 } from 'viem/chains';
 
 const ETHEREUM = mainnet.id;
@@ -39,6 +40,7 @@ const CELO = celo.id;
 const AVALANCHE = avalanche.id;
 const AVALANCHE_FUJI = avalancheFuji.id;
 const GNOSIS = gnosis.id;
+const BSC = bsc.id;
 
 const CHAINS: ChainId[] = [
   ETHEREUM,
@@ -59,6 +61,7 @@ const CHAINS: ChainId[] = [
   AVALANCHE,
   AVALANCHE_FUJI,
   GNOSIS,
+  BSC,
 ];
 
 const chainSchema = v.union([
@@ -81,6 +84,7 @@ const chainSchema = v.union([
   v.literal(AVALANCHE.toString()),
   v.literal(AVALANCHE_FUJI.toString()),
   v.literal(GNOSIS.toString()),
+  v.literal(BSC.toString()),
 ]);
 
 type ChainId =
@@ -101,7 +105,8 @@ type ChainId =
   | typeof CELO
   | typeof AVALANCHE
   | typeof AVALANCHE_FUJI
-  | typeof GNOSIS;
+  | typeof GNOSIS
+  | typeof BSC;
 
 function getChainData(chain: ChainId): ChainData {
   switch (chain) {
@@ -141,6 +146,8 @@ function getChainData(chain: ChainId): ChainData {
       return avalancheFuji;
     case GNOSIS:
       return gnosis;
+    case BSC:
+      return bsc;
   }
 }
 
@@ -168,6 +175,7 @@ export {
   AVALANCHE,
   AVALANCHE_FUJI,
   GNOSIS,
+  BSC,
   getChainData,
   parseChainId,
   chainSchema,
