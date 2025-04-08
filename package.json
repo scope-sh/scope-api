@@ -27,7 +27,7 @@
     "@hono/valibot-validator": "^0.5.2",
     "@shazow/whatsabi": "^0.20.0",
     "drizzle-orm": "^0.40.0",
-    "evm-providers": "^0.5.5",
+    "evm-providers": "^0.5.7",
     "hono": "^4.7.4",
     "ky": "^1.7.5",
     "minio": "^8.0.4",
