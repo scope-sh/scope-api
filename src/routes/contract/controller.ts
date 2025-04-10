@@ -127,6 +127,10 @@ async function getSource(
     minioSecretKey,
     minioBucket,
   );
+  const code = await client.getCode({ address });
+  if (!code) {
+    return null;
+  }
   const contract = await fetchContract(minioService, chain, address);
   if (!contract.value) {
     return null;
