@@ -16,11 +16,17 @@ import {
   toEventSelector,
   toFunctionSelector,
 } from 'viem';
-import { celo, mode } from 'viem/chains';
+import { celo, megaethTestnet, mode } from 'viem/chains';
 
 import EtherscanService from '@/services/etherscan';
 import MinioService, { type ContractSource } from '@/services/minio';
-import { ChainId, getChainData, MODE, CELO } from '@/utils/chains';
+import {
+  ChainId,
+  getChainData,
+  MODE,
+  CELO,
+  MEGAETH_TESTNET,
+} from '@/utils/chains';
 import { Deployment, SourceCode } from '@/utils/contracts';
 import { toErrorSelector } from '@/utils/evm';
 import { getImplementation } from '@/utils/proxy';
@@ -87,6 +93,9 @@ function getClient(chain: ChainId, alchemyKey: string): PublicClient {
     }
     if (chain === CELO) {
       return celo.rpcUrls.default.http[0];
+    }
+    if (chain === MEGAETH_TESTNET) {
+      return megaethTestnet.rpcUrls.default.http[0];
     }
     return alchemy(chain, alchemyKey);
   }

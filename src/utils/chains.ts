@@ -20,6 +20,7 @@ import {
   gnosis,
   bsc,
   monadTestnet,
+  megaethTestnet,
 } from 'viem/chains';
 
 const ETHEREUM = mainnet.id;
@@ -41,6 +42,7 @@ const AVALANCHE_FUJI = avalancheFuji.id;
 const GNOSIS = gnosis.id;
 const BSC = bsc.id;
 const MONAD_TESTNET = monadTestnet.id;
+const MEGAETH_TESTNET = megaethTestnet.id;
 
 const CHAINS: ChainId[] = [
   ETHEREUM,
@@ -62,6 +64,7 @@ const CHAINS: ChainId[] = [
   GNOSIS,
   BSC,
   MONAD_TESTNET,
+  MEGAETH_TESTNET,
 ];
 
 const chainSchema = v.union([
@@ -85,6 +88,7 @@ const chainSchema = v.union([
   v.literal(GNOSIS.toString()),
   v.literal(BSC.toString()),
   v.literal(MONAD_TESTNET.toString()),
+  v.literal(MEGAETH_TESTNET.toString()),
 ]);
 
 type ChainId =
@@ -106,7 +110,8 @@ type ChainId =
   | typeof AVALANCHE_FUJI
   | typeof GNOSIS
   | typeof BSC
-  | typeof MONAD_TESTNET;
+  | typeof MONAD_TESTNET
+  | typeof MEGAETH_TESTNET;
 
 function getChainData(chain: ChainId): ChainData {
   switch (chain) {
@@ -148,6 +153,8 @@ function getChainData(chain: ChainId): ChainData {
       return bsc;
     case MONAD_TESTNET:
       return monadTestnet;
+    case MEGAETH_TESTNET:
+      return megaethTestnet;
   }
 }
 
@@ -176,6 +183,7 @@ export {
   GNOSIS,
   BSC,
   MONAD_TESTNET,
+  MEGAETH_TESTNET,
   getChainData,
   parseChainId,
   chainSchema,

@@ -21,6 +21,7 @@ import {
   GNOSIS,
   BSC,
   MONAD_TESTNET,
+  MEGAETH_TESTNET,
 } from '@/utils/chains';
 import {
   LabelType,
@@ -195,6 +196,8 @@ function getErc20Icon(chain: ChainId, address: string): string | undefined {
       case BSC:
         return 'binance';
       case MONAD_TESTNET:
+        return null;
+      case MEGAETH_TESTNET:
         return null;
     }
   }
