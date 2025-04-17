@@ -16,7 +16,7 @@ import {
   toEventSelector,
   toFunctionSelector,
 } from 'viem';
-import { celo, mode } from 'viem/chains';
+import { celo, megaethTestnet, mode } from 'viem/chains';
 
 import EtherscanService from '@/services/etherscan';
 import MinioService, { type ContractSource } from '@/services/minio';
@@ -95,7 +95,7 @@ function getClient(chain: ChainId, alchemyKey: string): PublicClient {
       return celo.rpcUrls.default.http[0];
     }
     if (chain === MEGAETH_TESTNET) {
-      return 'https://6342.rpc.hypersync.xyz/';
+      return megaethTestnet.rpcUrls.default.http[0];
     }
     return alchemy(chain, alchemyKey);
   }
