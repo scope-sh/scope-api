@@ -19,4 +19,5 @@ bun run dev
 ## Related
 
 * [Scope UI](https://github.com/scope-sh/scope-app)
-* [Scope Label Registry](https://github.com/scope-sh/scope-registry)
+* [Scope Registry](https://github.com/scope-sh/scope-registry)
+* [Indexer](https://github.com/scope-sh/hyperindex-erc4337)
