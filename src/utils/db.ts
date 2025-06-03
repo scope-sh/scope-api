@@ -27,7 +27,6 @@ interface Source {
 
 const databaseUrl = process.env.DATABASE_URL as string;
 
-// eslint-disable-next-line import-x/no-named-as-default-member
 const client = new pg.Client({
   connectionString: databaseUrl,
 });

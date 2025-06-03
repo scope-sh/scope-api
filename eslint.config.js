@@ -53,6 +53,12 @@ export default [
           devDependencies: ['src/**/*.test.ts'],
         },
       ],
+      'import-x/no-unresolved': [
+        'error',
+        {
+          ignore: ['^bun:', '^minio$'],
+        },
+      ],
       '@typescript-eslint/explicit-function-return-type': 'error',
     },
   },
