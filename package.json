@@ -25,27 +25,27 @@
   },
   "dependencies": {
     "@hono/valibot-validator": "^0.5.2",
-    "@shazow/whatsabi": "^0.20.0",
-    "drizzle-orm": "^0.40.0",
+    "@shazow/whatsabi": "^0.22.2",
+    "drizzle-orm": "^0.44.1",
     "evm-providers": "^0.5.7",
-    "hono": "^4.7.4",
-    "ky": "^1.7.5",
-    "minio": "^8.0.4",
+    "hono": "^4.7.11",
+    "ky": "^1.8.1",
+    "minio": "^8.0.5",
     "minisearch": "^7.1.2",
-    "pg": "^8.13.3",
-    "valibot": "^1.0.0-rc.3",
-    "viem": "^2.27.2"
+    "pg": "^8.16.0",
+    "valibot": "^1.1.0",
+    "viem": "^2.30.6"
   },
   "devDependencies": {
-    "@eslint/js": "^9.21.0",
-    "@types/bun": "^1.2.4",
-    "@types/pg": "^8.11.11",
-    "eslint": "^9.21.0",
-    "eslint-import-resolver-typescript": "^3.8.3",
-    "eslint-plugin-import-x": "^4.6.1",
+    "@eslint/js": "^9.28.0",
+    "@types/bun": "^1.2.15",
+    "@types/pg": "^8.15.4",
+    "eslint": "^9.28.0",
+    "eslint-import-resolver-typescript": "^4.4.2",
+    "eslint-plugin-import-x": "^4.15.0",
     "prettier": "^3.5.3",
-    "tsx": "^4.19.3",
-    "typescript": "^5.8.2",
-    "typescript-eslint": "^8.26.0"
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.33.1"
   }
 }
